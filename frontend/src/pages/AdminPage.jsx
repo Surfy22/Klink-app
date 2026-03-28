@@ -91,7 +91,7 @@ export default function AdminPage() {
   /* ── États de chargement / erreur ── */
   if (status === 'connecting') {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0D0D0D' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#050A14' }}>
         <div className="text-center">
           <div className="flex justify-center mb-4 animate-float">
             <KlinkLogo size={56} />
@@ -104,7 +104,7 @@ export default function AdminPage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0D0D0D' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#050A14' }}>
         <div className="text-center glass-card rounded-3xl p-8 max-w-sm w-full">
           <div className="text-5xl mb-4">🔒</div>
           <p className="text-white font-black text-xl mb-2">Accès refusé</p>
@@ -120,30 +120,30 @@ export default function AdminPage() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0D0D0D' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#050A14' }}>
 
       {/* Header */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(13,13,13,0.90)',
+          background:     'rgba(5,10,20,0.92)',
           backdropFilter: 'blur(20px)',
-          borderBottom:   '1px solid rgba(255,255,255,0.07)',
+          borderBottom:   '1px solid rgba(0,255,135,0.10)',
         }}
       >
         <div className="flex items-center gap-2.5">
           <KlinkLogo size={28} />
           <div>
             <p className="text-white font-black text-sm neon-text">KLINK Admin</p>
-            <p className="text-white/35 text-xs">Bar {barId}</p>
+            <p className="text-xs" style={{ color: '#8BB8D4' }}>Bar {barId}</p>
           </div>
         </div>
         <span
           className="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
           style={{
-            color:      '#00FF87',
-            background: 'rgba(0,255,135,0.10)',
-            border:     '1px solid rgba(0,255,135,0.20)',
+            color:      '#00D4FF',
+            background: 'rgba(0,212,255,0.10)',
+            border:     '1px solid rgba(0,212,255,0.22)',
           }}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[#00FF87] animate-pulse inline-block" />
@@ -155,8 +155,8 @@ export default function AdminPage() {
       <div
         className="flex border-b sticky top-[57px] z-10"
         style={{
-          background:   'rgba(13,13,13,0.90)',
-          borderColor:  'rgba(255,255,255,0.07)',
+          background:   'rgba(5,10,20,0.92)',
+          borderColor:  'rgba(0,255,135,0.10)',
           backdropFilter: 'blur(20px)',
         }}
       >
@@ -183,37 +183,6 @@ export default function AdminPage() {
         {/* ── Onglet EN DIRECT ── */}
         {activeTab === 'live' && (
           <>
-            {/* Annonce */}
-            <div>
-              <h2 className="text-white font-black text-base mb-3">Envoyer une annonce</h2>
-              <form onSubmit={handleAnnounce} className="space-y-3">
-                <textarea
-                  value={announcement}
-                  onChange={(e) => setAnnouncement(e.target.value)}
-                  placeholder="Ex : Happy hour jusqu'à 20h — 2 bières achetées = 1 offerte !"
-                  rows={3}
-                  maxLength={200}
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm resize-none"
-                />
-                <button
-                  type="submit"
-                  disabled={!announcement.trim()}
-                  className="w-full py-3.5 rounded-2xl font-black text-base transition-all active:scale-95"
-                  style={announcement.trim() ? {
-                    background: 'linear-gradient(135deg, #FFD700, #FF9500)',
-                    color:      '#000',
-                    boxShadow:  '0 4px 20px rgba(255,215,0,0.25)',
-                  } : {
-                    background: 'rgba(255,255,255,0.06)',
-                    color:      'rgba(255,255,255,0.25)',
-                    cursor:     'not-allowed',
-                  }}
-                >
-                  {sent ? '✅ Annonce envoyée !' : '📢 Envoyer à toutes les tables'}
-                </button>
-              </form>
-            </div>
-
             {/* Statistiques */}
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -333,6 +302,37 @@ export default function AdminPage() {
                     Effacer le message
                   </button>
                 )}
+              </form>
+            </div>
+
+            {/* Annonce */}
+            <div>
+              <h2 className="text-white font-black text-base mb-3">Envoyer une annonce</h2>
+              <form onSubmit={handleAnnounce} className="space-y-3">
+                <textarea
+                  value={announcement}
+                  onChange={(e) => setAnnouncement(e.target.value)}
+                  placeholder="Ex : Happy hour jusqu'à 20h — 2 bières achetées = 1 offerte !"
+                  rows={3}
+                  maxLength={200}
+                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm resize-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!announcement.trim()}
+                  className="w-full py-3.5 rounded-2xl font-black text-base transition-all active:scale-95"
+                  style={announcement.trim() ? {
+                    background: 'linear-gradient(135deg, #FFD700, #FF9500)',
+                    color:      '#000',
+                    boxShadow:  '0 4px 20px rgba(255,215,0,0.25)',
+                  } : {
+                    background: 'rgba(255,255,255,0.06)',
+                    color:      'rgba(255,255,255,0.25)',
+                    cursor:     'not-allowed',
+                  }}
+                >
+                  {sent ? '✅ Annonce envoyée !' : '📢 Envoyer à toutes les tables'}
+                </button>
               </form>
             </div>
 

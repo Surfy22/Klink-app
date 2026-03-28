@@ -16,10 +16,13 @@ body {
   font-weight: 400;
   -webkit-font-smoothing:  antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0D0D0D;
+  background-color: #050A14;
   background-image:
-    radial-gradient(ellipse at 15% 15%, rgba(0, 255, 135, 0.04) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 85%, rgba(0, 153, 255, 0.04) 0%, transparent 55%);
+    radial-gradient(ellipse at 50% 0%,   rgba(10,22,40,0.90) 0%, transparent 60%),
+    radial-gradient(ellipse at 15% 20%,  rgba(0,255,135,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%,  rgba(0,212,255,0.05) 0%, transparent 50%),
+    radial-gradient(circle, rgba(0,212,255,0.022) 1px, transparent 1px);
+  background-size: auto, auto, auto, 28px 28px;
   color: white;
   min-height: 100vh;
   overflow-x: hidden;
@@ -45,58 +48,58 @@ h1, h2, h3 {
 /* ─── Scrollbar ──────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 3px; }
 ::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb  { background: rgba(0,212,255,0.15); border-radius: 2px; }
 
 /* ─── Utilitaires design système ─────────────────────────────────────────── */
 
-/* Logo KLINK néon vert */
+/* Logo KLINK néon vert-bleu */
 .neon-text {
   text-shadow:
-    0 0 12px rgba(0, 255, 135, 0.8),
-    0 0 30px rgba(0, 255, 135, 0.5),
-    0 0 60px rgba(0, 255, 135, 0.2);
+    0 0 10px rgba(0, 255, 135, 0.90),
+    0 0 25px rgba(0, 255, 135, 0.55),
+    0 0 50px rgba(0, 212, 255, 0.30);
 }
 
-/* Card glassmorphism */
+/* Card glassmorphism energy */
 .glass-card {
-  background:              rgba(255, 255, 255, 0.05);
+  background:              rgba(0, 212, 255, 0.05);
   backdrop-filter:         blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border:                  1px solid rgba(255, 255, 255, 0.10);
+  border:                  1px solid rgba(0, 255, 135, 0.15);
 }
 
 /* Input glassmorphism */
 .glass-input {
-  background:   rgba(255, 255, 255, 0.06);
-  border:       1px solid rgba(255, 255, 255, 0.10);
+  background:   rgba(0, 212, 255, 0.06);
+  border:       1px solid rgba(0, 255, 135, 0.15);
   color:        white;
   transition:   border-color 0.2s, box-shadow 0.2s;
   outline:      none;
 }
 .glass-input:focus {
-  border-color: rgba(0, 255, 135, 0.50);
-  box-shadow:   0 0 0 3px rgba(0, 255, 135, 0.08);
+  border-color: rgba(0, 255, 135, 0.55);
+  box-shadow:   0 0 0 3px rgba(0, 255, 135, 0.10);
 }
-.glass-input::placeholder { color: rgba(255,255,255,0.30); }
+.glass-input::placeholder { color: rgba(139,184,212,0.40); }
 
-/* Bouton gradient principal vert→bleu */
+/* Bouton gradient principal vert→bleu électrique */
 .btn-gradient {
-  background:  linear-gradient(135deg, #00FF87 0%, #0099FF 100%);
+  background:  linear-gradient(135deg, #00FF87 0%, #00D4FF 100%);
   color:       #000;
   font-weight: 900;
-  box-shadow:  0 4px 24px rgba(0, 255, 135, 0.25), 0 2px 8px rgba(0, 153, 255, 0.15);
+  box-shadow:  0 4px 24px rgba(0, 255, 135, 0.30), 0 2px 8px rgba(0, 212, 255, 0.20);
   transition:  all 0.15s ease;
 }
-.btn-gradient:hover   { filter: brightness(1.06); }
+.btn-gradient:hover   { filter: brightness(1.07); }
 .btn-gradient:active  { transform: scale(0.96); }
 .btn-gradient:disabled {
-  background:  rgba(255,255,255,0.08);
-  color:       rgba(255,255,255,0.25);
+  background:  rgba(255,255,255,0.06);
+  color:       rgba(255,255,255,0.22);
   box-shadow:  none;
   cursor:      not-allowed;
 }
 
-/* ─── Animation barre de progression annonce ────────────────────────────── */
+/* ─── Animations ─────────────────────────────────────────────────────────── */
 @keyframes shrink-bar {
   0%   { width: 100%; }
   100% { width: 0%;   }
@@ -115,6 +118,17 @@ h1, h2, h3 {
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+@keyframes neon-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px #00FF87) drop-shadow(0 0 6px #00FF87);
+    opacity: 1;
+  }
+  50% {
+    filter: drop-shadow(0 0 8px #00FF87) drop-shadow(0 0 18px #00D4FF);
+    opacity: 0.65;
+  }
 }
 
 /* ─── Twemoji ────────────────────────────────────────────────────────────── */

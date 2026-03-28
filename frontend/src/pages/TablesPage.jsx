@@ -8,24 +8,24 @@ import AnnouncementOverlay from '../components/AnnouncementToast';
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 function cardBorder(i) {
-  if (i === 0) return '1.5px solid rgba(255,215,0,0.40)';
-  if (i === 1) return '1px solid rgba(192,192,192,0.28)';
-  if (i === 2) return '1px solid rgba(205,127,50,0.30)';
-  return '1px solid rgba(255,255,255,0.07)';
+  if (i === 0) return '1.5px solid rgba(255,215,0,0.55)';
+  if (i === 1) return '1px solid rgba(0,212,255,0.45)';
+  if (i === 2) return '1px solid rgba(0,255,135,0.35)';
+  return '1px solid rgba(0,212,255,0.12)';
 }
 
 function cardBg(i) {
   if (i === 0) return 'rgba(255,215,0,0.08)';
-  if (i === 1) return 'rgba(192,192,192,0.05)';
-  if (i === 2) return 'rgba(205,127,50,0.07)';
-  return 'rgba(255,255,255,0.04)';
+  if (i === 1) return 'rgba(0,212,255,0.07)';
+  if (i === 2) return 'rgba(0,255,135,0.06)';
+  return 'rgba(0,212,255,0.03)';
 }
 
 function pseudoColor(i) {
   if (i === 0) return '#FFD700';
-  if (i === 1) return 'rgba(210,210,210,0.90)';
-  if (i === 2) return 'rgba(205,127,50,0.95)';
-  return 'rgba(255,255,255,0.75)';
+  if (i === 1) return '#00D4FF';
+  if (i === 2) return '#00FF87';
+  return 'rgba(139,184,212,0.80)';
 }
 
 /** Éclair SVG néon inline pour les scores */
@@ -34,7 +34,13 @@ function LightningScore({ wins }) {
     <span className="flex items-center gap-1 font-black text-xs" style={{ color: '#00FF87' }}>
       {wins}
       <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
-        <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
+        <defs>
+          <linearGradient id="ls-g" x1="0" y1="0" x2="0" y2="1">
+            <stop stopColor="#00FF87" />
+            <stop offset="1" stopColor="#00D4FF" />
+          </linearGradient>
+        </defs>
+        <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="url(#ls-g)" />
       </svg>
     </span>
   );
@@ -56,24 +62,24 @@ export default function TablesPage({
   const hasLeaderboard = topScores.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0D0D0D' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#050A14' }}>
 
       {/* Header glassmorphism */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(13,13,13,0.85)',
+          background:     'rgba(5,10,20,0.90)',
           backdropFilter: 'blur(20px)',
-          borderBottom:   '1px solid rgba(255,255,255,0.07)',
+          borderBottom:   '1px solid rgba(0,255,135,0.10)',
         }}
       >
         <div className="flex items-center gap-2.5">
           <KlinkLogo size={28} />
           <div>
-            <p className="text-white font-black text-sm leading-tight neon-text" style={{ fontSize: 15 }}>
+            <p className="text-white font-black text-sm leading-tight neon-text" style={{ fontSize: 15, letterSpacing: '-0.03em' }}>
               KLINK
             </p>
-            <p className="text-white/35 text-xs">Table {tableId}</p>
+            <p className="text-xs" style={{ color: '#8BB8D4' }}>Table {tableId}</p>
           </div>
         </div>
 
@@ -85,7 +91,7 @@ export default function TablesPage({
         </div>
       </header>
 
-      {/* Annonce gérant — en-ligne entre header et main */}
+      {/* Annonce gérant */}
       {announcement && (
         <AnnouncementOverlay message={announcement} onDismiss={onDismissAnnouncement} />
       )}
@@ -99,9 +105,9 @@ export default function TablesPage({
             onClick={() => setShowQR(true)}
             className="w-full mb-4 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
             style={{
-              background: 'rgba(0,153,255,0.10)',
-              border:     '1px solid rgba(0,153,255,0.25)',
-              color:       '#0099FF',
+              background: 'rgba(0,212,255,0.08)',
+              border:     '1px solid rgba(0,212,255,0.28)',
+              color:      '#00D4FF',
             }}
           >
             <span>📲</span> Partager mon contact
@@ -114,8 +120,8 @@ export default function TablesPage({
               className="text-xs font-bold px-2.5 py-1 rounded-full"
               style={{
                 color:      '#00FF87',
-                background: 'rgba(0,255,135,0.1)',
-                border:     '1px solid rgba(0,255,135,0.2)',
+                background: 'rgba(0,255,135,0.10)',
+                border:     '1px solid rgba(0,255,135,0.22)',
               }}
             >
               {tables.length} table{tables.length !== 1 ? 's' : ''}
@@ -126,7 +132,7 @@ export default function TablesPage({
             <div className="text-center py-20">
               <div className="text-6xl mb-4 animate-float">🪑</div>
               <p className="text-white font-bold text-base">Aucune autre table active</p>
-              <p className="text-white/30 text-sm mt-2 leading-relaxed">
+              <p className="text-sm mt-2 leading-relaxed" style={{ color: 'rgba(139,184,212,0.40)' }}>
                 Les autres tables apparaîtront ici<br />quand elles rejoindront le bar
               </p>
             </div>
@@ -142,7 +148,7 @@ export default function TablesPage({
                     <Avatar pseudo={table.pseudo} photo={table.photo} size={52} active />
                     <div className="min-w-0">
                       <p className="text-white font-bold truncate">{table.pseudo}</p>
-                      <p className="text-white/35 text-xs">Table {table.tableId}</p>
+                      <p className="text-xs" style={{ color: '#8BB8D4' }}>Table {table.tableId}</p>
                     </div>
                   </div>
 
@@ -150,8 +156,8 @@ export default function TablesPage({
                     onClick={() => onInvite(table)}
                     className="shrink-0 px-4 py-2.5 rounded-xl font-black text-sm text-black transition-all active:scale-95"
                     style={{
-                      background: 'linear-gradient(135deg, #00FF87, #0099FF)',
-                      boxShadow:  '0 2px 12px rgba(0,255,135,0.25)',
+                      background: 'linear-gradient(135deg, #00FF87, #00D4FF)',
+                      boxShadow:  '0 2px 14px rgba(0,255,135,0.30)',
                     }}
                   >
                     Inviter
@@ -168,21 +174,19 @@ export default function TablesPage({
         <div
           className="w-full"
           style={{
-            background:     'rgba(13,13,13,0.96)',
+            background:     'rgba(5,10,20,0.97)',
             backdropFilter: 'blur(24px)',
-            borderTop:      '1px solid rgba(0,255,135,0.12)',
+            borderTop:      '1px solid rgba(0,255,135,0.14)',
           }}
         >
-          {/* Message personnalisé du gérant */}
           {leaderboardMessage && (
-            <div className="px-4 pt-3 pb-1 text-center animate-fade-in">
+            <div className="px-4 pt-3 pb-1 text-center">
               <p className="text-sm font-bold" style={{ color: '#FFD700' }}>
                 {leaderboardMessage}
               </p>
             </div>
           )}
 
-          {/* En-tête du widget */}
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <span
               className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5"
@@ -195,20 +199,18 @@ export default function TablesPage({
             </span>
             <span
               className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ color: '#00FF87', background: 'rgba(0,255,135,0.10)', border: '1px solid rgba(0,255,135,0.20)' }}
+              style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.10)', border: '1px solid rgba(0,212,255,0.22)' }}
             >
               En direct
             </span>
           </div>
 
-          {/* Séparateur gradient */}
           <div style={{
             height:     '1px',
             background: 'linear-gradient(90deg, transparent, rgba(0,255,135,0.25), transparent)',
-            margin:     '0 16px 0',
+            margin:     '0 16px',
           }} />
 
-          {/* Lignes du classement */}
           <div className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 scrollbar-none">
             {topScores.map(([pseudo, { wins, photo }], i) => (
               <div
@@ -218,6 +220,9 @@ export default function TablesPage({
                   background: cardBg(i),
                   border:     cardBorder(i),
                   minWidth:   '72px',
+                  boxShadow:  i === 0 ? '0 0 12px rgba(255,215,0,0.18)' :
+                              i === 1 ? '0 0 10px rgba(0,212,255,0.15)' :
+                              i === 2 ? '0 0 10px rgba(0,255,135,0.12)' : 'none',
                 }}
               >
                 <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
@@ -239,22 +244,24 @@ export default function TablesPage({
       <footer
         className="px-4 py-2.5 flex items-center justify-center gap-2"
         style={{
-          background: 'rgba(13,13,13,0.85)',
-          borderTop:  '1px solid rgba(255,255,255,0.06)',
+          background: 'rgba(5,10,20,0.90)',
+          borderTop:  '1px solid rgba(0,255,135,0.08)',
         }}
       >
         {connected ? (
           <>
-            <span
-              className="w-2 h-2 rounded-full animate-pulse"
-              style={{ background: '#00FF87', boxShadow: '0 0 6px #00FF87' }}
-            />
-            <span className="text-white/30 text-xs">Connecté · Bar {barId}</span>
+            <svg
+              width="9" height="13" viewBox="0 0 8 12" fill="none"
+              style={{ animation: 'neon-pulse 2.4s ease-in-out infinite' }}
+            >
+              <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
+            </svg>
+            <span className="text-xs" style={{ color: '#00D4FF' }}>Connecté · Bar {barId}</span>
           </>
         ) : (
           <>
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#FF6B6B' }} />
-            <span className="text-white/40 text-xs">Reconnexion en cours…</span>
+            <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#FF4D6D' }} />
+            <span className="text-xs" style={{ color: 'rgba(255,77,109,0.75)' }}>Reconnexion en cours…</span>
           </>
         )}
       </footer>
@@ -264,14 +271,15 @@ export default function TablesPage({
         <div
           className="fixed top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl text-sm font-semibold animate-slide-up flex items-center gap-2 max-w-[88vw]"
           style={{
-            background:     'rgba(255,255,255,0.08)',
-            border:         '1px solid rgba(255,255,255,0.12)',
-            backdropFilter: 'blur(12px)',
+            background:     'rgba(5,10,20,0.92)',
+            border:         '1px solid rgba(255,77,109,0.35)',
+            backdropFilter: 'blur(14px)',
+            color:          '#FF4D6D',
           }}
         >
           ❌ <span className="truncate">
             <span className="font-bold text-white">{inviteResponse.responderPseudo}</span>
-            <span className="text-white/60"> a refusé votre invitation</span>
+            <span style={{ color: 'rgba(139,184,212,0.65)' }}> a refusé votre invitation</span>
           </span>
         </div>
       )}

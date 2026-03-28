@@ -16,7 +16,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
     maxHeight:     '90vh',
     overflowY:     'auto',
     borderRadius:  '28px',
-    background:    'rgba(13,10,0,0.95)',
+    background:    'rgba(5,10,20,0.95)',
     border:        '1.5px solid rgba(255,215,0,0.40)',
     boxShadow:     '0 0 50px rgba(255,215,0,0.18), 0 0 100px rgba(255,215,0,0.08), 0 24px 64px rgba(0,0,0,0.85)',
     backdropFilter:      'blur(24px)',
@@ -44,7 +44,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
         alignItems:          'center',
         justifyContent:      'center',
         padding:             '16px',
-        background:          'rgba(0,0,0,0.90)',
+        background:          'rgba(5,10,20,0.92)',
         backdropFilter:      'blur(14px)',
         WebkitBackdropFilter:'blur(14px)',
       }}
