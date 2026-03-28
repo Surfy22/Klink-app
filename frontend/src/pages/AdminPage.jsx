@@ -91,7 +91,7 @@ export default function AdminPage() {
   /* ── États de chargement / erreur ── */
   if (status === 'connecting') {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#050A14' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080F1E' }}>
         <div className="text-center">
           <div className="flex justify-center mb-4 animate-float">
             <KlinkLogo size={56} />
@@ -104,7 +104,7 @@ export default function AdminPage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#050A14' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#080F1E' }}>
         <div className="text-center glass-card rounded-3xl p-8 max-w-sm w-full">
           <div className="text-5xl mb-4">🔒</div>
           <p className="text-white font-black text-xl mb-2">Accès refusé</p>
@@ -120,13 +120,13 @@ export default function AdminPage() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#050A14' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#080F1E' }}>
 
       {/* Header */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(5,10,20,0.92)',
+          background:     'rgba(8,15,30,0.92)',
           backdropFilter: 'blur(20px)',
           borderBottom:   '1px solid rgba(0,255,135,0.10)',
         }}
@@ -155,7 +155,7 @@ export default function AdminPage() {
       <div
         className="flex border-b sticky top-[57px] z-10"
         style={{
-          background:   'rgba(5,10,20,0.92)',
+          background:   'rgba(8,15,30,0.92)',
           borderColor:  'rgba(0,255,135,0.10)',
           backdropFilter: 'blur(20px)',
         }}

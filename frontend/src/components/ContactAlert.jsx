@@ -16,7 +16,7 @@ export default function ContactAlert({ contact, onDismiss }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: 'rgba(5,10,20,0.88)', backdropFilter: 'blur(14px)' }}
+      style={{ background: 'rgba(8,15,30,0.88)', backdropFilter: 'blur(14px)' }}
     >
       <div
         className="rounded-3xl w-full max-w-sm animate-bounce-in overflow-hidden"

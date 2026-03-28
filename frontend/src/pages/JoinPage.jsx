@@ -17,7 +17,7 @@ export default function JoinPage({ tableId, onJoin }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6"
-         style={{ background: '#050A14' }}>
+         style={{ background: '#080F1E' }}>
       <div className="w-full max-w-sm">
 
         {/* Logo néon */}
@@ -51,7 +51,7 @@ export default function JoinPage({ tableId, onJoin }) {
               className="relative p-[3px] rounded-full"
               style={{ background: 'linear-gradient(135deg, #00FF87, #00D4FF)', boxShadow: '0 0 20px rgba(0,255,135,0.35), 0 0 40px rgba(0,212,255,0.18)' }}
             >
-              <div className="rounded-full p-[2px]" style={{ background: '#050A14' }}>
+              <div className="rounded-full p-[2px]" style={{ background: '#080F1E' }}>
                 <Avatar pseudo={pseudo} photo={photo} size={96} />
               </div>
             </div>

@@ -62,13 +62,13 @@ export default function TablesPage({
   const hasLeaderboard = topScores.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#050A14' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#080F1E' }}>
 
       {/* Header glassmorphism */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(5,10,20,0.90)',
+          background:     'rgba(8,15,30,0.90)',
           backdropFilter: 'blur(20px)',
           borderBottom:   '1px solid rgba(0,255,135,0.10)',
         }}
@@ -174,7 +174,7 @@ export default function TablesPage({
         <div
           className="w-full"
           style={{
-            background:     'rgba(5,10,20,0.97)',
+            background:     'rgba(8,15,30,0.97)',
             backdropFilter: 'blur(24px)',
             borderTop:      '1px solid rgba(0,255,135,0.14)',
           }}
@@ -244,7 +244,7 @@ export default function TablesPage({
       <footer
         className="px-4 py-2.5 flex items-center justify-center gap-2"
         style={{
-          background: 'rgba(5,10,20,0.90)',
+          background: 'rgba(8,15,30,0.90)',
           borderTop:  '1px solid rgba(0,255,135,0.08)',
         }}
       >
@@ -271,7 +271,7 @@ export default function TablesPage({
         <div
           className="fixed top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl text-sm font-semibold animate-slide-up flex items-center gap-2 max-w-[88vw]"
           style={{
-            background:     'rgba(5,10,20,0.92)',
+            background:     'rgba(8,15,30,0.92)',
             border:         '1px solid rgba(255,77,109,0.35)',
             backdropFilter: 'blur(14px)',
             color:          '#FF4D6D',

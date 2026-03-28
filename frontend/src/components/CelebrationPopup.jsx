@@ -46,7 +46,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
   return (
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: 'rgba(5,10,20,0.94)', backdropFilter: 'blur(18px)' }}
+      style={{ background: 'rgba(8,15,30,0.94)', backdropFilter: 'blur(18px)' }}
     >
       {!isTie && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
