@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
 /**
- * Annonce gérant — bannière en-ligne (non fixed), à placer entre le header et le main.
- * Auto-fermeture après 15 secondes.
+ * Annonce gérant — overlay fixe centré, couvre 80% de l'écran.
+ * Auto-fermeture après 15 secondes. Tables visibles en arrière-plan.
  */
 export default function AnnouncementOverlay({ message, onDismiss }) {
   useEffect(() => {
@@ -13,85 +13,103 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
   return (
     <div
       style={{
-        animation: 'slide-down 0.3s cubic-bezier(0.34,1.56,0.64,1)',
-        padding:   '6px 12px 0',
+        position:            'fixed',
+        inset:               0,
+        zIndex:              150,
+        display:             'flex',
+        alignItems:          'center',
+        justifyContent:      'center',
+        padding:             '16px',
+        background:          'rgba(0,0,0,0.60)',
+        backdropFilter:      'blur(6px)',
+        WebkitBackdropFilter:'blur(6px)',
+        animation:           'fade-in 0.25s ease',
       }}
     >
       <div
         style={{
-          borderRadius:    '16px',
-          background:      'rgba(18, 14, 0, 0.95)',
-          border:          '1.5px solid rgba(255,200,0,0.45)',
-          backdropFilter:  'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow:       '0 4px 24px rgba(255,200,0,0.18), 0 2px 12px rgba(0,0,0,0.70)',
-          overflow:        'hidden',
+          width:               '90vw',
+          maxWidth:            '480px',
+          minHeight:           '40vh',
+          display:             'flex',
+          flexDirection:       'column',
+          alignItems:          'center',
+          justifyContent:      'center',
+          gap:                 '18px',
+          borderRadius:        '28px',
+          background:          'rgba(10,8,0,0.93)',
+          border:              '2px solid #FFD700',
+          boxShadow:           '0 0 60px rgba(255,215,0,0.30), 0 0 120px rgba(255,215,0,0.10), inset 0 0 60px rgba(255,215,0,0.04)',
+          backdropFilter:      'blur(24px)',
+          WebkitBackdropFilter:'blur(24px)',
+          padding:             '40px 28px 28px',
+          position:            'relative',
+          animation:           'announce-in 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         }}
       >
-        {/* Liseré doré en haut */}
-        <div style={{
-          height:     '2px',
-          background: 'linear-gradient(90deg, #FFD700, #FF9500, #FFD700)',
-        }} />
+        {/* Bouton fermer */}
+        <button
+          onClick={onDismiss}
+          aria-label="Fermer"
+          style={{
+            position:            'absolute',
+            top:                 '14px',
+            right:               '14px',
+            width:               '38px',
+            height:              '38px',
+            borderRadius:        '50%',
+            background:          'rgba(255,255,255,0.10)',
+            border:              '1px solid rgba(255,255,255,0.18)',
+            color:               'rgba(255,255,255,0.75)',
+            fontSize:            '18px',
+            cursor:              'pointer',
+            display:             'flex',
+            alignItems:          'center',
+            justifyContent:      'center',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          ✕
+        </button>
 
-        {/* Contenu */}
-        <div style={{
-          display:    'flex',
-          alignItems: 'center',
-          gap:        '10px',
-          padding:    '10px 12px 8px',
+        {/* Icône */}
+        <span style={{ fontSize: '52px', lineHeight: 1 }}>📢</span>
+
+        {/* Label */}
+        <p style={{
+          color:         '#FFD700',
+          fontSize:      '12px',
+          fontWeight:    800,
+          textTransform: 'uppercase',
+          letterSpacing: '0.12em',
+          margin:        0,
         }}>
-          {/* Icône */}
-          <span style={{ fontSize: '18px', flexShrink: 0 }}>📢</span>
+          Annonce du gérant
+        </p>
 
-          {/* Label + message */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{
-              color:         '#FFD700',
-              fontSize:      '10px',
-              fontWeight:    700,
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              margin:        '0 0 2px',
-            }}>
-              Annonce du gérant
-            </p>
-            <p style={{
-              color:      'white',
-              fontSize:   '14px',
-              fontWeight: 600,
-              margin:     0,
-              lineHeight: 1.35,
-            }}>
-              {message}
-            </p>
-          </div>
-
-          {/* Bouton fermer */}
-          <button
-            onClick={onDismiss}
-            aria-label="Fermer"
-            style={{
-              flexShrink:     0,
-              width:          '28px',
-              height:         '28px',
-              borderRadius:   '50%',
-              background:     'rgba(255,255,255,0.10)',
-              border:         'none',
-              color:          'rgba(255,255,255,0.55)',
-              fontSize:       '14px',
-              cursor:         'pointer',
-              display:        'flex',
-              alignItems:     'center',
-              justifyContent: 'center',
-            }}
-          >
-            ✕
-          </button>
-        </div>
+        {/* Message */}
+        <p style={{
+          color:      '#ffffff',
+          fontSize:   '24px',
+          fontWeight: 700,
+          textAlign:  'center',
+          lineHeight: 1.35,
+          margin:     0,
+          padding:    '0 8px',
+          wordBreak:  'break-word',
+        }}>
+          {message}
+        </p>
 
         {/* Barre de progression */}
-        <div style={{ height: '2px', background: 'rgba(255,200,0,0.15)', overflow: 'hidden' }}>
+        <div style={{
+          width:        '100%',
+          height:       '3px',
+          background:   'rgba(255,215,0,0.15)',
+          borderRadius: '2px',
+          overflow:     'hidden',
+          marginTop:    '8px',
+        }}>
           <div style={{
             height:     '100%',
             background: 'linear-gradient(90deg, #FFD700, #FF9500)',

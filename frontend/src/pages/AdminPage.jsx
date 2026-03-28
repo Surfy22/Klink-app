@@ -183,6 +183,37 @@ export default function AdminPage() {
         {/* ── Onglet EN DIRECT ── */}
         {activeTab === 'live' && (
           <>
+            {/* Annonce */}
+            <div>
+              <h2 className="text-white font-black text-base mb-3">Envoyer une annonce</h2>
+              <form onSubmit={handleAnnounce} className="space-y-3">
+                <textarea
+                  value={announcement}
+                  onChange={(e) => setAnnouncement(e.target.value)}
+                  placeholder="Ex : Happy hour jusqu'à 20h — 2 bières achetées = 1 offerte !"
+                  rows={3}
+                  maxLength={200}
+                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm resize-none"
+                />
+                <button
+                  type="submit"
+                  disabled={!announcement.trim()}
+                  className="w-full py-3.5 rounded-2xl font-black text-base transition-all active:scale-95"
+                  style={announcement.trim() ? {
+                    background: 'linear-gradient(135deg, #FFD700, #FF9500)',
+                    color:      '#000',
+                    boxShadow:  '0 4px 20px rgba(255,215,0,0.25)',
+                  } : {
+                    background: 'rgba(255,255,255,0.06)',
+                    color:      'rgba(255,255,255,0.25)',
+                    cursor:     'not-allowed',
+                  }}
+                >
+                  {sent ? '✅ Annonce envoyée !' : '📢 Envoyer à toutes les tables'}
+                </button>
+              </form>
+            </div>
+
             {/* Statistiques */}
             <div className="grid grid-cols-3 gap-3">
               {[
@@ -370,36 +401,6 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Annonce */}
-            <div>
-              <h2 className="text-white font-black text-base mb-3">Envoyer une annonce</h2>
-              <form onSubmit={handleAnnounce} className="space-y-3">
-                <textarea
-                  value={announcement}
-                  onChange={(e) => setAnnouncement(e.target.value)}
-                  placeholder="Ex : Happy hour jusqu'à 20h — 2 bières achetées = 1 offerte !"
-                  rows={3}
-                  maxLength={200}
-                  className="glass-input w-full rounded-2xl px-4 py-3 text-sm resize-none"
-                />
-                <button
-                  type="submit"
-                  disabled={!announcement.trim()}
-                  className="w-full py-3.5 rounded-2xl font-black text-base transition-all active:scale-95"
-                  style={announcement.trim() ? {
-                    background: 'linear-gradient(135deg, #FFD700, #FF9500)',
-                    color:      '#000',
-                    boxShadow:  '0 4px 20px rgba(255,215,0,0.25)',
-                  } : {
-                    background: 'rgba(255,255,255,0.06)',
-                    color:      'rgba(255,255,255,0.25)',
-                    cursor:     'not-allowed',
-                  }}
-                >
-                  {sent ? '✅ Annonce envoyée !' : '📢 Envoyer à toutes les tables'}
-                </button>
-              </form>
-            </div>
           </>
         )}
 

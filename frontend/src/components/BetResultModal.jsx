@@ -4,7 +4,6 @@ import Avatar from './Avatar';
 /**
  * Modal de désignation du gagnant — BLOQUANT.
  * Les deux tables DOIVENT désigner un gagnant avant de continuer.
- * Pas de bouton "Décider plus tard", pas de fermeture en cliquant dehors.
  */
 export default function BetResultModal({ celebration, currentTableId, onResult }) {
   const { table1, table2, message } = celebration;
@@ -12,69 +11,130 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
   const [chosen, setChosen] = useState(null);
 
   const cardStyle = {
-    position:  'fixed',
-    top:       '50%',
-    left:      '50%',
-    transform: 'translate(-50%, -50%)',
-    width:     '90vw',
-    maxWidth:  '400px',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 0 60px rgba(255,215,0,0.12), 0 20px 60px rgba(0,0,0,0.8)',
-    border:    '1px solid rgba(255,215,0,0.20)',
+    width:         '90vw',
+    maxWidth:      '420px',
+    maxHeight:     '90vh',
+    overflowY:     'auto',
+    borderRadius:  '28px',
+    background:    'rgba(13,10,0,0.95)',
+    border:        '1.5px solid rgba(255,215,0,0.40)',
+    boxShadow:     '0 0 50px rgba(255,215,0,0.18), 0 0 100px rgba(255,215,0,0.08), 0 24px 64px rgba(0,0,0,0.85)',
+    backdropFilter:      'blur(24px)',
+    WebkitBackdropFilter:'blur(24px)',
+    padding:       '24px 20px 20px',
+    animation:     'announce-in 0.30s cubic-bezier(0.34,1.56,0.64,1)',
   };
+
+  const goldBar = (
+    <div style={{
+      height: '3px',
+      background: 'linear-gradient(90deg, transparent, #FFD700, #FF9500, #FFD700, transparent)',
+      borderRadius: '2px',
+      marginBottom: '20px',
+    }} />
+  );
 
   return (
     <div
-      className="fixed inset-0 z-50"
-      style={{ background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(12px)' }}
+      style={{
+        position:            'fixed',
+        inset:               0,
+        zIndex:              200,
+        display:             'flex',
+        alignItems:          'center',
+        justifyContent:      'center',
+        padding:             '16px',
+        background:          'rgba(0,0,0,0.90)',
+        backdropFilter:      'blur(14px)',
+        WebkitBackdropFilter:'blur(14px)',
+      }}
     >
-      {/* Liseré néon en haut */}
-      <div
-        className="absolute top-0 inset-x-0 h-[2px]"
-        style={{ background: 'linear-gradient(90deg, #FFD700, #00FF87, #0099FF)' }}
-      />
-
       {step === 'pick' ? (
-        <div className="glass-card rounded-3xl p-7 w-full animate-bounce-in" style={cardStyle}>
+        <div style={cardStyle}>
+          {goldBar}
+
           {/* Titre */}
-          <div className="text-center mb-2">
-            <div className="text-3xl mb-2">🏆</div>
-            <p className="text-white font-black text-lg">Qui a gagné le pari ?</p>
-            <p
-              className="text-sm mt-1 px-3 py-1.5 rounded-xl inline-block"
-              style={{ color: 'rgba(255,255,255,0.55)', background: 'rgba(255,255,255,0.05)' }}
-            >
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏆</div>
+            <p style={{ color: '#fff', fontWeight: 900, fontSize: '20px', margin: '0 0 10px' }}>
+              Qui a gagné le pari ?
+            </p>
+            <p style={{
+              color:        'rgba(255,255,255,0.55)',
+              fontSize:     '13px',
+              background:   'rgba(255,255,255,0.06)',
+              border:       '1px solid rgba(255,255,255,0.09)',
+              borderRadius: '12px',
+              padding:      '8px 14px',
+              display:      'inline-block',
+              maxWidth:     '100%',
+              lineHeight:   1.4,
+            }}>
               {message}
             </p>
           </div>
 
-          {/* Message obligatoire */}
-          <div
-            className="flex items-center gap-2 rounded-xl px-3 py-2 mb-4 mt-3"
-            style={{ background: 'rgba(255,200,0,0.08)', border: '1px solid rgba(255,200,0,0.20)' }}
-          >
-            <span className="text-sm">⚠️</span>
-            <p className="text-xs font-semibold" style={{ color: 'rgba(255,200,0,0.85)' }}>
-              Vous devez désigner le gagnant pour continuer
+          {/* Avertissement */}
+          <div style={{
+            display:      'flex',
+            alignItems:   'center',
+            gap:          '8px',
+            background:   'rgba(255,200,0,0.08)',
+            border:       '1px solid rgba(255,200,0,0.22)',
+            borderRadius: '12px',
+            padding:      '10px 14px',
+            marginBottom: '18px',
+          }}>
+            <span style={{ fontSize: '16px' }}>⚠️</span>
+            <p style={{ color: 'rgba(255,200,0,0.90)', fontSize: '12px', fontWeight: 700, margin: 0 }}>
+              Désignez un gagnant pour continuer
             </p>
           </div>
 
           {/* Choix des deux tables */}
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: '12px' }}>
             {[table1, table2].map((t) => (
               <button
                 key={t.tableId}
                 onClick={() => { setChosen(t); setStep('confirm'); }}
-                className="flex-1 flex flex-col items-center gap-3 py-5 rounded-2xl transition-all active:scale-95"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
+                style={{
+                  flex:           1,
+                  display:        'flex',
+                  flexDirection:  'column',
+                  alignItems:     'center',
+                  gap:            '10px',
+                  padding:        '18px 8px',
+                  borderRadius:   '20px',
+                  background:     'rgba(255,255,255,0.06)',
+                  border:         '1.5px solid rgba(255,255,255,0.12)',
+                  cursor:         'pointer',
+                  transition:     'transform 0.1s, border-color 0.15s',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                onTouchStart={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+                onTouchEnd={(e)   => e.currentTarget.style.transform = 'scale(1)'}
               >
                 <Avatar pseudo={t.pseudo} photo={t.photo} size={64} />
-                <span className="text-white font-bold text-sm truncate max-w-full px-2">{t.pseudo}</span>
-                <span
-                  className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                  style={{ background: 'rgba(255,215,0,0.10)', color: '#FFD700', border: '1px solid rgba(255,215,0,0.20)' }}
-                >
+                <span style={{
+                  color:      '#fff',
+                  fontWeight: 700,
+                  fontSize:   '13px',
+                  textAlign:  'center',
+                  wordBreak:  'break-word',
+                  lineHeight: 1.3,
+                  padding:    '0 4px',
+                }}>
+                  {t.pseudo}
+                </span>
+                <span style={{
+                  background:   'rgba(255,215,0,0.12)',
+                  color:        '#FFD700',
+                  border:       '1px solid rgba(255,215,0,0.28)',
+                  borderRadius: '999px',
+                  padding:      '4px 12px',
+                  fontSize:     '11px',
+                  fontWeight:   800,
+                }}>
                   🏆 Gagnant
                 </span>
               </button>
@@ -82,41 +142,77 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
           </div>
         </div>
       ) : (
-        <div className="glass-card rounded-3xl p-7 w-full animate-bounce-in" style={cardStyle}>
-          {/* Titre */}
-          <div className="text-center mb-6">
-            <div className="text-4xl mb-3">🏆</div>
-            <p className="text-white font-black text-xl">Confirmer le gagnant ?</p>
+        <div style={cardStyle}>
+          {goldBar}
+
+          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '8px' }}>🏆</div>
+            <p style={{ color: '#fff', fontWeight: 900, fontSize: '20px', margin: 0 }}>
+              Confirmer le gagnant ?
+            </p>
           </div>
 
           {/* Profil choisi */}
-          <div
-            className="flex flex-col items-center gap-3 py-6 rounded-2xl mb-6"
-            style={{ background: 'rgba(255,215,0,0.08)', border: '1.5px solid rgba(255,215,0,0.35)' }}
-          >
+          <div style={{
+            display:        'flex',
+            flexDirection:  'column',
+            alignItems:     'center',
+            gap:            '10px',
+            padding:        '20px 16px',
+            borderRadius:   '20px',
+            background:     'rgba(255,215,0,0.08)',
+            border:         '1.5px solid rgba(255,215,0,0.38)',
+            marginBottom:   '20px',
+          }}>
             <Avatar pseudo={chosen.pseudo} photo={chosen.photo} size={76} active />
-            <p className="text-white font-black text-lg">{chosen.pseudo}</p>
-            <span
-              className="text-sm px-3 py-1 rounded-full font-bold"
-              style={{ color: '#FFD700', background: 'rgba(255,215,0,0.12)', border: '1px solid rgba(255,215,0,0.25)' }}
-            >
+            <p style={{ color: '#fff', fontWeight: 900, fontSize: '18px', margin: 0, textAlign: 'center' }}>
+              {chosen.pseudo}
+            </p>
+            <span style={{
+              color:        '#FFD700',
+              background:   'rgba(255,215,0,0.12)',
+              border:       '1px solid rgba(255,215,0,0.28)',
+              borderRadius: '999px',
+              padding:      '4px 14px',
+              fontSize:     '12px',
+              fontWeight:   700,
+            }}>
               Table {chosen.tableId}
             </span>
           </div>
 
           {/* Boutons */}
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: '12px' }}>
             <button
               onClick={() => { setStep('pick'); setChosen(null); }}
-              className="flex-1 py-3.5 rounded-2xl font-bold text-base transition-all active:scale-95"
-              style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.55)' }}
+              style={{
+                flex:         1,
+                padding:      '15px 8px',
+                borderRadius: '18px',
+                fontWeight:   700,
+                fontSize:     '15px',
+                background:   'rgba(255,255,255,0.07)',
+                border:       '1px solid rgba(255,255,255,0.13)',
+                color:        'rgba(255,255,255,0.60)',
+                cursor:       'pointer',
+              }}
             >
               ❌ Annuler
             </button>
             <button
               onClick={() => onResult(chosen.pseudo, chosen.tableId, chosen.photo)}
-              className="flex-1 py-3.5 rounded-2xl font-black text-base text-black transition-all active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #FFD700, #FF9500)', boxShadow: '0 4px 16px rgba(255,215,0,0.30)' }}
+              style={{
+                flex:         1,
+                padding:      '15px 8px',
+                borderRadius: '18px',
+                fontWeight:   900,
+                fontSize:     '15px',
+                background:   'linear-gradient(135deg, #FFD700, #FF9500)',
+                color:        '#000',
+                border:       'none',
+                cursor:       'pointer',
+                boxShadow:    '0 4px 20px rgba(255,215,0,0.35)',
+              }}
             >
               ✅ Confirmer
             </button>
