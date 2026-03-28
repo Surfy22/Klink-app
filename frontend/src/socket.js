@@ -1,8 +1,8 @@
 import { io } from 'socket.io-client';
 
-// Connexion same-origin : Vite proxifie /socket.io → localhost:3001.
-// Fonctionne sur localhost, LAN (192.168.x.x) et tunnel HTTPS (lhr.life).
-const BACKEND_URL = window.location.origin;
+// En prod : VITE_BACKEND_URL pointe vers le backend Railway.
+// En dev local : fallback sur window.location.origin (proxy Vite).
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
 
 const socket = io(BACKEND_URL, {
   autoConnect:          false,

@@ -13,6 +13,8 @@ const CORS_ORIGIN = process.env.CLIENT_URL || [
   // Tunnels HTTPS (localhost.run et Cloudflare — pour iOS Safari)
   /^https:\/\/[a-z0-9]+\.lhr\.life$/,
   /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/,
+  // Vercel (production + previews)
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/,
 ];
 
 const io = new Server(server, {
