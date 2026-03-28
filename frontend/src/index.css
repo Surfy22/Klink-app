@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Reset ───────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Base typographique ─────────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #0D0D0D;
+  background-image:
+    radial-gradient(ellipse at 15% 15%, rgba(0, 255, 135, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 85%, rgba(0, 153, 255, 0.04) 0%, transparent 55%);
+  color: white;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root { min-height: 100vh; }
+
+/* Titres : ExtraBold, tracking négatif */
+h1, h2, h3 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+/* Labels et badges : SemiBold uppercase */
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 3px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* ─── Utilitaires design système ─────────────────────────────────────────── */
+
+/* Logo KLINK néon vert */
+.neon-text {
+  text-shadow:
+    0 0 12px rgba(0, 255, 135, 0.8),
+    0 0 30px rgba(0, 255, 135, 0.5),
+    0 0 60px rgba(0, 255, 135, 0.2);
+}
+
+/* Card glassmorphism */
+.glass-card {
+  background:              rgba(255, 255, 255, 0.05);
+  backdrop-filter:         blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border:                  1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* Input glassmorphism */
+.glass-input {
+  background:   rgba(255, 255, 255, 0.06);
+  border:       1px solid rgba(255, 255, 255, 0.10);
+  color:        white;
+  transition:   border-color 0.2s, box-shadow 0.2s;
+  outline:      none;
+}
+.glass-input:focus {
+  border-color: rgba(0, 255, 135, 0.50);
+  box-shadow:   0 0 0 3px rgba(0, 255, 135, 0.08);
+}
+.glass-input::placeholder { color: rgba(255,255,255,0.30); }
+
+/* Bouton gradient principal vert→bleu */
+.btn-gradient {
+  background:  linear-gradient(135deg, #00FF87 0%, #0099FF 100%);
+  color:       #000;
+  font-weight: 900;
+  box-shadow:  0 4px 24px rgba(0, 255, 135, 0.25), 0 2px 8px rgba(0, 153, 255, 0.15);
+  transition:  all 0.15s ease;
+}
+.btn-gradient:hover   { filter: brightness(1.06); }
+.btn-gradient:active  { transform: scale(0.96); }
+.btn-gradient:disabled {
+  background:  rgba(255,255,255,0.08);
+  color:       rgba(255,255,255,0.25);
+  box-shadow:  none;
+  cursor:      not-allowed;
+}
+
+/* ─── Animation barre de progression annonce ────────────────────────────── */
+@keyframes shrink-bar {
+  0%   { width: 100%; }
+  100% { width: 0%;   }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Twemoji ────────────────────────────────────────────────────────────── */
+img.twemoji {
+  height:         1.15em;
+  width:          1.15em;
+  vertical-align: -0.2em;
+  display:        inline-block;
+  pointer-events: none;
+}
