@@ -15,17 +15,17 @@ export default function ContactAlert({ contact, onDismiss }) {
 
   return (
     <div
-      className="overlay-dark fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-      style={{ background: 'rgba(8,15,30,0.88)', backdropFilter: 'blur(14px)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      style={{ background: 'rgba(8,15,30,0.75)', backdropFilter: 'blur(14px)' }}
     >
       <div
         className="rounded-3xl w-full max-w-sm animate-bounce-in overflow-hidden"
         style={{
-          background:          'rgba(0,212,255,0.05)',
-          border:              '1.5px solid rgba(0,212,255,0.35)',
+          background:          'rgba(255,255,255,0.88)',
+          border:              '1.5px solid rgba(0,212,255,0.28)',
           backdropFilter:      'blur(24px)',
           WebkitBackdropFilter:'blur(24px)',
-          boxShadow:           '0 0 60px rgba(0,212,255,0.14), 0 20px 40px rgba(0,0,0,0.70)',
+          boxShadow:           '0 0 30px rgba(0,212,255,0.12), 0 20px 40px rgba(0,0,0,0.18)',
         }}
       >
         {/* Liseré gradient */}
@@ -53,8 +53,8 @@ export default function ContactAlert({ contact, onDismiss }) {
           <div className="flex items-center gap-3 mb-5">
             <Avatar pseudo={fromPseudo} photo={fromPhoto ?? null} size={52} active />
             <div>
-              <p className="text-white font-black text-base">{fromPseudo}</p>
-              <p className="text-xs" style={{ color: '#8BB8D4' }}>vous partage son contact</p>
+              <p className="font-black text-base" style={{ color: '#0A1628' }}>{fromPseudo}</p>
+              <p className="text-xs" style={{ color: '#4A6FA5' }}>vous partage son contact</p>
             </div>
           </div>
 

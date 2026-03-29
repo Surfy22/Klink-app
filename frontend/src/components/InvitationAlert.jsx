@@ -18,8 +18,8 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
   }
 
   return (
-    <div className="overlay-dark fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
-         style={{ background: 'rgba(8,15,30,0.92)', backdropFilter: 'blur(14px)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
+         style={{ background: 'rgba(8,15,30,0.75)', backdropFilter: 'blur(14px)' }}>
 
       {/* Anneaux pulsants néon */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
@@ -39,11 +39,11 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
       <div
         className="relative rounded-3xl p-6 w-full max-w-xs shadow-2xl animate-bounce-in"
         style={{
-          background:          'rgba(0,212,255,0.05)',
-          border:              '1.5px solid rgba(0,255,135,0.28)',
+          background:          'rgba(255,255,255,0.88)',
+          border:              '1.5px solid rgba(0,212,255,0.28)',
           backdropFilter:      'blur(24px)',
           WebkitBackdropFilter:'blur(24px)',
-          boxShadow:           '0 0 60px rgba(0,255,135,0.14), 0 0 100px rgba(0,212,255,0.08), 0 20px 40px rgba(0,0,0,0.70)',
+          boxShadow:           '0 0 40px rgba(0,255,135,0.12), 0 20px 40px rgba(0,0,0,0.25)',
         }}
       >
         {/* Liseré gradient en haut */}
@@ -74,16 +74,16 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             </div>
           </div>
 
-          <p className="text-white font-black text-xl">{invite.fromPseudo}</p>
-          <p className="text-xs mt-0.5" style={{ color: '#8BB8D4' }}>Table {invite.fromTableId}</p>
+          <p className="font-black text-xl" style={{ color: '#0A1628' }}>{invite.fromPseudo}</p>
+          <p className="text-xs mt-0.5" style={{ color: '#4A6FA5' }}>Table {invite.fromTableId}</p>
         </div>
 
         {/* Message */}
         <div
           className="rounded-2xl px-4 py-4 mb-5 text-center"
-          style={{ background: 'rgba(0,212,255,0.05)', border: '1px solid rgba(0,255,135,0.12)' }}
+          style={{ background: 'rgba(240,244,255,0.85)', border: '1px solid rgba(0,212,255,0.20)' }}
         >
-          <p className="text-white text-base leading-relaxed">{invite.message}</p>
+          <p className="text-base leading-relaxed" style={{ color: '#0A1628' }}>{invite.message}</p>
         </div>
 
         {/* Actions */}

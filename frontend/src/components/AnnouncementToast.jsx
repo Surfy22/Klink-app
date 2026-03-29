@@ -12,7 +12,6 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
 
   return (
     <div
-      className="overlay-dark"
       style={{
         position:            'fixed',
         inset:               0,
@@ -38,9 +37,9 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
           justifyContent:      'center',
           gap:                 '18px',
           borderRadius:        '28px',
-          background:          'rgba(8,15,30,0.95)',
+          background:          'rgba(255,255,255,0.92)',
           border:              '2px solid #FFD700',
-          boxShadow:           '0 0 60px rgba(255,215,0,0.30), 0 0 120px rgba(255,215,0,0.10), inset 0 0 60px rgba(255,215,0,0.04)',
+          boxShadow:           '0 0 60px rgba(255,215,0,0.22), 0 0 120px rgba(255,215,0,0.08), 0 24px 64px rgba(0,0,0,0.18)',
           backdropFilter:      'blur(24px)',
           WebkitBackdropFilter:'blur(24px)',
           padding:             '40px 28px 28px',
@@ -59,9 +58,9 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
             width:               '38px',
             height:              '38px',
             borderRadius:        '50%',
-            background:          'rgba(255,255,255,0.10)',
-            border:              '1px solid rgba(255,255,255,0.18)',
-            color:               'rgba(255,255,255,0.75)',
+            background:          'rgba(10,22,40,0.08)',
+            border:              '1px solid rgba(10,22,40,0.12)',
+            color:               'rgba(10,22,40,0.45)',
             fontSize:            '18px',
             cursor:              'pointer',
             display:             'flex',
@@ -78,7 +77,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
 
         {/* Label */}
         <p style={{
-          color:         '#FFD700',
+          color:         '#B8860B',
           fontSize:      '12px',
           fontWeight:    800,
           textTransform: 'uppercase',
@@ -90,7 +89,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
 
         {/* Message */}
         <p style={{
-          color:      '#ffffff',
+          color:      '#0A1628',
           fontSize:   '24px',
           fontWeight: 700,
           textAlign:  'center',
@@ -106,7 +105,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
         <div style={{
           width:        '100%',
           height:       '3px',
-          background:   'rgba(255,215,0,0.15)',
+          background:   'rgba(255,215,0,0.25)',
           borderRadius: '2px',
           overflow:     'hidden',
           marginTop:    '8px',

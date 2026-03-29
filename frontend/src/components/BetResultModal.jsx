@@ -19,7 +19,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
   };
 
   const cardInner = {
-    background:  'rgba(8,15,30,0.97)',
+    background:  'rgba(255,255,255,0.92)',
     borderRadius:'28px',
     padding:     '24px 20px 20px',
     width:       '90vw',
@@ -66,7 +66,6 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
 
   return (
     <div
-      className="overlay-dark"
       style={{
         position:            'fixed',
         inset:               0,
@@ -75,7 +74,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
         alignItems:          'center',
         justifyContent:      'center',
         padding:             '16px',
-        background:          'rgba(8,15,30,0.92)',
+        background:          'rgba(8,15,30,0.75)',
         backdropFilter:      'blur(14px)',
         WebkitBackdropFilter:'blur(14px)',
       }}
@@ -90,7 +89,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
               <NeonBolt />
               <p style={gradientTitle}>Qui a gagné le pari ?</p>
               <p style={{
-                color:        'rgba(139,184,212,0.65)',
+                color:        'rgba(74,111,165,0.75)',
                 fontSize:     '13px',
                 background:   'rgba(0,212,255,0.06)',
                 border:       '1px solid rgba(0,212,255,0.18)',
@@ -136,8 +135,8 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
                     gap:            '10px',
                     padding:        '18px 8px',
                     borderRadius:   '20px',
-                    background:     'rgba(0,212,255,0.06)',
-                    border:         '1.5px solid rgba(0,255,135,0.22)',
+                    background:     'rgba(240,244,255,0.85)',
+                    border:         '1.5px solid rgba(0,212,255,0.22)',
                     cursor:         'pointer',
                     transition:     'transform 0.1s, border-color 0.15s',
                     WebkitTapHighlightColor: 'transparent',
@@ -147,7 +146,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
                 >
                   <Avatar pseudo={t.pseudo} photo={t.photo} size={64} />
                   <span style={{
-                    color:      '#ffffff',
+                    color:      '#0A1628',
                     fontWeight: 700,
                     fontSize:   '13px',
                     textAlign:  'center',
@@ -197,7 +196,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
               boxShadow:      '0 0 22px rgba(0,255,135,0.12)',
             }}>
               <Avatar pseudo={chosen.pseudo} photo={chosen.photo} size={76} active />
-              <p style={{ color: '#fff', fontWeight: 900, fontSize: '18px', margin: 0, textAlign: 'center' }}>
+              <p style={{ color: '#0A1628', fontWeight: 900, fontSize: '18px', margin: 0, textAlign: 'center' }}>
                 {chosen.pseudo}
               </p>
               <span style={{

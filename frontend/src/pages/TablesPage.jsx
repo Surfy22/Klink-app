@@ -149,35 +149,22 @@ export default function TablesPage({
                     <Avatar pseudo={table.pseudo} photo={table.photo} size={52} active />
                     <div className="min-w-0">
                       <p className="text-white font-bold truncate">{table.pseudo}</p>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {table.tableId}</p>
-                        {table.status === 'En jeu' && (
-                          <span
-                            className="text-xs px-1.5 py-0.5 rounded-full font-bold leading-none"
-                            style={{
-                              background: 'rgba(255,150,0,0.13)',
-                              color:      '#FF9500',
-                              border:     '1px solid rgba(255,150,0,0.35)',
-                            }}
-                          >
-                            🍺 En jeu
-                          </span>
-                        )}
-                      </div>
+                      <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {table.tableId}</p>
                     </div>
                   </div>
 
                   <button
-                    onClick={() => onInvite(table)}
+                    onClick={() => !table.status && onInvite(table)}
+                    disabled={!!table.status}
                     className="shrink-0 px-4 py-2.5 rounded-xl font-black text-sm text-black transition-all active:scale-95"
                     style={{
-                      background: table.status === 'En jeu'
-                        ? 'linear-gradient(135deg, rgba(0,255,135,0.55), rgba(0,212,255,0.55))'
-                        : 'linear-gradient(135deg, #00FF87, #00D4FF)',
-                      boxShadow:  '0 2px 14px rgba(0,255,135,0.30)',
+                      background:  'linear-gradient(135deg, #00FF87, #00D4FF)',
+                      boxShadow:   table.status ? 'none' : '0 2px 14px rgba(0,255,135,0.30)',
+                      opacity:     table.status ? 0.4 : 1,
+                      cursor:      table.status ? 'not-allowed' : 'pointer',
                     }}
                   >
-                    {table.status === 'En jeu' ? 'Inviter quand même' : 'Inviter'}
+                    Inviter
                   </button>
                 </div>
               ))}
