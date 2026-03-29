@@ -91,7 +91,7 @@ export default function AdminPage() {
   /* ── États de chargement / erreur ── */
   if (status === 'connecting') {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#080F1E' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F0F4FF' }}>
         <div className="text-center">
           <div className="flex justify-center mb-4 animate-float">
             <KlinkLogo size={56} />
@@ -104,7 +104,7 @@ export default function AdminPage() {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#080F1E' }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#F0F4FF' }}>
         <div className="text-center glass-card rounded-3xl p-8 max-w-sm w-full">
           <div className="text-5xl mb-4">🔒</div>
           <p className="text-white font-black text-xl mb-2">Accès refusé</p>
@@ -120,22 +120,22 @@ export default function AdminPage() {
     .slice(0, 5);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#080F1E' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
 
       {/* Header */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(8,15,30,0.92)',
+          background:     'rgba(240,244,255,0.92)',
           backdropFilter: 'blur(20px)',
-          borderBottom:   '1px solid rgba(0,255,135,0.10)',
+          borderBottom:   '1px solid rgba(0,212,255,0.18)',
         }}
       >
         <div className="flex items-center gap-2.5">
           <KlinkLogo size={28} />
           <div>
             <p className="text-white font-black text-sm neon-text">KLINK Admin</p>
-            <p className="text-xs" style={{ color: '#8BB8D4' }}>Bar {barId}</p>
+            <p className="text-xs" style={{ color: '#4A6FA5' }}>Bar {barId}</p>
           </div>
         </div>
         <span
@@ -155,8 +155,8 @@ export default function AdminPage() {
       <div
         className="flex border-b sticky top-[57px] z-10"
         style={{
-          background:   'rgba(8,15,30,0.92)',
-          borderColor:  'rgba(0,255,135,0.10)',
+          background:   'rgba(240,244,255,0.92)',
+          borderColor:  'rgba(0,212,255,0.18)',
           backdropFilter: 'blur(20px)',
         }}
       >
@@ -169,7 +169,7 @@ export default function AdminPage() {
             onClick={() => id === 'history' ? handleLoadHistory() : setActiveTab(id)}
             className="flex-1 py-3 text-sm font-bold transition-colors"
             style={{
-              color:        activeTab === id ? '#00FF87' : 'rgba(255,255,255,0.35)',
+              color:        activeTab === id ? '#00FF87' : 'rgba(10,22,40,0.40)',
               borderBottom: activeTab === id ? '2px solid #00FF87' : '2px solid transparent',
             }}
           >
@@ -221,9 +221,9 @@ export default function AdminPage() {
                         <span
                           className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
                           style={{
-                            background: 'rgba(255,255,255,0.07)',
-                            color:      'rgba(255,255,255,0.55)',
-                            border:     '1px solid rgba(255,255,255,0.10)',
+                            background: 'rgba(10,22,40,0.07)',
+                            color:      'rgba(10,22,40,0.55)',
+                            border:     '1px solid rgba(10,22,40,0.15)',
                           }}
                         >
                           {t.status}
@@ -246,13 +246,13 @@ export default function AdminPage() {
                       className="flex items-center gap-3 px-4 py-3"
                       style={{
                         borderBottom: i < topScores.length - 1
-                          ? '1px solid rgba(255,255,255,0.06)'
+                          ? '1px solid rgba(10,22,40,0.08)'
                           : 'none',
                       }}
                     >
                       <span
                         className="font-black text-sm w-6 text-center shrink-0"
-                        style={{ color: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'rgba(255,255,255,0.35)' }}
+                        style={{ color: i === 0 ? '#FFD700' : i === 1 ? '#C0C0C0' : i === 2 ? '#CD7F32' : 'rgba(10,22,40,0.40)' }}
                       >
                         {i + 1}
                       </span>
@@ -326,8 +326,8 @@ export default function AdminPage() {
                     color:      '#000',
                     boxShadow:  '0 4px 20px rgba(255,215,0,0.25)',
                   } : {
-                    background: 'rgba(255,255,255,0.06)',
-                    color:      'rgba(255,255,255,0.25)',
+                    background: 'rgba(10,22,40,0.07)',
+                    color:      'rgba(10,22,40,0.28)',
                     cursor:     'not-allowed',
                   }}
                 >
@@ -380,17 +380,17 @@ export default function AdminPage() {
                 style={adminEmail ? {
                   background: testReportState === 'ok'    ? 'rgba(0,255,135,0.15)'  :
                                testReportState === 'error' ? 'rgba(255,80,80,0.15)'  :
-                               'rgba(255,255,255,0.07)',
+                               'rgba(10,22,40,0.06)',
                   color:      testReportState === 'ok'    ? '#00FF87' :
                                testReportState === 'error' ? '#FF5050' :
-                               'rgba(255,255,255,0.70)',
+                               'rgba(10,22,40,0.60)',
                   border:     testReportState === 'ok'    ? '1px solid rgba(0,255,135,0.30)'  :
                                testReportState === 'error' ? '1px solid rgba(255,80,80,0.30)'  :
-                               '1px solid rgba(255,255,255,0.10)',
+                               '1px solid rgba(10,22,40,0.15)',
                 } : {
-                  background: 'rgba(255,255,255,0.04)',
-                  color:      'rgba(255,255,255,0.20)',
-                  border:     '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(10,22,40,0.04)',
+                  color:      'rgba(10,22,40,0.25)',
+                  border:     '1px solid rgba(10,22,40,0.10)',
                   cursor:     'not-allowed',
                 }}
               >
@@ -431,12 +431,12 @@ export default function AdminPage() {
                       {/* En-tête date */}
                       <div
                         className="px-4 py-3 flex items-center justify-between"
-                        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                        style={{ borderBottom: '1px solid rgba(10,22,40,0.08)' }}
                       >
                         <span className="text-white font-black text-sm">📅 {snap.date}</span>
                         <span
                           className="text-xs px-2 py-0.5 rounded-full"
-                          style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)' }}
+                          style={{ background: 'rgba(10,22,40,0.07)', color: 'rgba(10,22,40,0.45)' }}
                         >
                           J-{i + 1}
                         </span>
@@ -453,7 +453,7 @@ export default function AdminPage() {
                             key={label}
                             className="p-3 text-center"
                             style={{
-                              borderRight: idx < 2 ? '1px solid rgba(255,255,255,0.06)' : 'none',
+                              borderRight: idx < 2 ? '1px solid rgba(10,22,40,0.08)' : 'none',
                             }}
                           >
                             <p className="text-lg">{emoji}</p>
@@ -465,13 +465,13 @@ export default function AdminPage() {
 
                       {/* Top 3 */}
                       {snapScores.length > 0 && (
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ borderTop: '1px solid rgba(10,22,40,0.08)' }}>
                           {snapScores.map(([pseudo, { wins }], j) => (
                             <div
                               key={pseudo}
                               className="flex items-center gap-3 px-4 py-2"
                               style={{
-                                borderBottom: j < snapScores.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                                borderBottom: j < snapScores.length - 1 ? '1px solid rgba(10,22,40,0.06)' : 'none',
                               }}
                             >
                               <span

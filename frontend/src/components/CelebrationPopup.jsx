@@ -45,7 +45,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in"
+      className="overlay-dark fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in"
       style={{ background: 'rgba(8,15,30,0.94)', backdropFilter: 'blur(18px)' }}
     >
       {!isTie && (

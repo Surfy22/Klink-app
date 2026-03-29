@@ -66,6 +66,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
 
   return (
     <div
+      className="overlay-dark"
       style={{
         position:            'fixed',
         inset:               0,
@@ -146,7 +147,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
                 >
                   <Avatar pseudo={t.pseudo} photo={t.photo} size={64} />
                   <span style={{
-                    color:      '#fff',
+                    color:      '#ffffff',
                     fontWeight: 700,
                     fontSize:   '13px',
                     textAlign:  'center',

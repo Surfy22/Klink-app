@@ -25,7 +25,7 @@ function pseudoColor(i) {
   if (i === 0) return '#FFD700';
   if (i === 1) return '#00D4FF';
   if (i === 2) return '#00FF87';
-  return 'rgba(139,184,212,0.80)';
+  return 'rgba(74,111,165,0.80)';
 }
 
 /** Éclair SVG néon inline pour les scores */
@@ -62,15 +62,15 @@ export default function TablesPage({
   const hasLeaderboard = topScores.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#080F1E' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
 
       {/* Header glassmorphism */}
       <header
         className="sticky top-0 z-10 px-4 py-3 flex items-center justify-between"
         style={{
-          background:     'rgba(8,15,30,0.90)',
+          background:     'rgba(240,244,255,0.92)',
           backdropFilter: 'blur(20px)',
-          borderBottom:   '1px solid rgba(0,255,135,0.10)',
+          borderBottom:   '1px solid rgba(0,212,255,0.18)',
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -79,7 +79,7 @@ export default function TablesPage({
             <p className="text-white font-black text-sm leading-tight neon-text" style={{ fontSize: 15, letterSpacing: '-0.03em' }}>
               KLINK
             </p>
-            <p className="text-xs" style={{ color: '#8BB8D4' }}>Table {tableId}</p>
+            <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {tableId}</p>
           </div>
         </div>
 
@@ -132,7 +132,7 @@ export default function TablesPage({
             <div className="text-center py-20">
               <div className="text-6xl mb-4 animate-float">🪑</div>
               <p className="text-white font-bold text-base">Aucune autre table active</p>
-              <p className="text-sm mt-2 leading-relaxed" style={{ color: 'rgba(139,184,212,0.40)' }}>
+              <p className="text-sm mt-2 leading-relaxed" style={{ color: 'rgba(74,111,165,0.70)' }}>
                 Les autres tables apparaîtront ici<br />quand elles rejoindront le bar
               </p>
             </div>
@@ -148,7 +148,7 @@ export default function TablesPage({
                     <Avatar pseudo={table.pseudo} photo={table.photo} size={52} active />
                     <div className="min-w-0">
                       <p className="text-white font-bold truncate">{table.pseudo}</p>
-                      <p className="text-xs" style={{ color: '#8BB8D4' }}>Table {table.tableId}</p>
+                      <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {table.tableId}</p>
                     </div>
                   </div>
 
@@ -174,7 +174,7 @@ export default function TablesPage({
         <div
           className="w-full"
           style={{
-            background:     'rgba(8,15,30,0.97)',
+            background:     'rgba(240,244,255,0.97)',
             backdropFilter: 'blur(24px)',
             borderTop:      '1px solid rgba(0,255,135,0.14)',
           }}
@@ -244,8 +244,8 @@ export default function TablesPage({
       <footer
         className="px-4 py-2.5 flex items-center justify-center gap-2"
         style={{
-          background: 'rgba(8,15,30,0.90)',
-          borderTop:  '1px solid rgba(0,255,135,0.08)',
+          background: 'rgba(240,244,255,0.92)',
+          borderTop:  '1px solid rgba(0,212,255,0.14)',
         }}
       >
         {connected ? (
@@ -271,7 +271,7 @@ export default function TablesPage({
         <div
           className="fixed top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl text-sm font-semibold animate-slide-up flex items-center gap-2 max-w-[88vw]"
           style={{
-            background:     'rgba(8,15,30,0.92)',
+            background:     'rgba(240,244,255,0.95)',
             border:         '1px solid rgba(255,77,109,0.35)',
             backdropFilter: 'blur(14px)',
             color:          '#FF4D6D',
@@ -279,7 +279,7 @@ export default function TablesPage({
         >
           ❌ <span className="truncate">
             <span className="font-bold text-white">{inviteResponse.responderPseudo}</span>
-            <span style={{ color: 'rgba(139,184,212,0.65)' }}> a refusé votre invitation</span>
+            <span style={{ color: 'rgba(74,111,165,0.80)' }}> a refusé votre invitation</span>
           </span>
         </div>
       )}

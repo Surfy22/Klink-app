@@ -18,7 +18,7 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
+    <div className="overlay-dark fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
          style={{ background: 'rgba(8,15,30,0.92)', backdropFilter: 'blur(14px)' }}>
 
       {/* Anneaux pulsants néon */}

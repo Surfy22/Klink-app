@@ -17,7 +17,7 @@ export default function JoinPage({ tableId, onJoin }) {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6"
-         style={{ background: '#080F1E' }}>
+         style={{ background: '#F0F4FF' }}>
       <div className="w-full max-w-sm">
 
         {/* Logo néon */}
@@ -51,7 +51,7 @@ export default function JoinPage({ tableId, onJoin }) {
               className="relative p-[3px] rounded-full"
               style={{ background: 'linear-gradient(135deg, #00FF87, #00D4FF)', boxShadow: '0 0 20px rgba(0,255,135,0.35), 0 0 40px rgba(0,212,255,0.18)' }}
             >
-              <div className="rounded-full p-[2px]" style={{ background: '#080F1E' }}>
+              <div className="rounded-full p-[2px]" style={{ background: '#F0F4FF' }}>
                 <Avatar pseudo={pseudo} photo={photo} size={96} />
               </div>
             </div>
@@ -70,7 +70,7 @@ export default function JoinPage({ tableId, onJoin }) {
                 type="button"
                 onClick={() => setPhoto(null)}
                 className="text-xs transition-colors"
-                style={{ color: 'rgba(139,184,212,0.45)' }}
+                style={{ color: 'rgba(74,111,165,0.55)' }}
               >
                 Supprimer la photo
               </button>
@@ -79,7 +79,7 @@ export default function JoinPage({ tableId, onJoin }) {
 
           {/* Nom de table */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#8BB8D4' }}>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4A6FA5' }}>
               Nom de votre table
             </label>
             <div className="flex gap-2">
@@ -97,12 +97,12 @@ export default function JoinPage({ tableId, onJoin }) {
                 onClick={() => setPseudo(generateName())}
                 title="Générer un nom de table"
                 className="glass-input rounded-xl px-3 py-3 text-lg transition-colors"
-                style={{ color: 'rgba(139,184,212,0.60)' }}
+                style={{ color: 'rgba(74,111,165,0.60)' }}
               >
                 🎲
               </button>
             </div>
-            <p className="text-xs mt-1.5" style={{ color: 'rgba(139,184,212,0.35)' }}>
+            <p className="text-xs mt-1.5" style={{ color: 'rgba(74,111,165,0.55)' }}>
               30 caractères · visible par les autres tables
             </p>
           </div>
@@ -119,8 +119,8 @@ export default function JoinPage({ tableId, onJoin }) {
               boxShadow:  '0 4px 32px rgba(0,255,135,0.40), 0 2px 12px rgba(0,212,255,0.25)',
               transition: 'all 0.15s',
             } : {
-              background: 'rgba(255,255,255,0.05)',
-              color:      'rgba(255,255,255,0.22)',
+              background: 'rgba(10,22,40,0.07)',
+              color:      'rgba(10,22,40,0.28)',
               fontWeight: 700,
               cursor:     'not-allowed',
             }}

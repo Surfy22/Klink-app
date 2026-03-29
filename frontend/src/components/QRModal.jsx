@@ -37,7 +37,7 @@ export default function ContactModal({ user, tables, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
+      className="overlay-dark fixed inset-0 z-50 flex items-center justify-center p-5 animate-fade-in"
       style={{ background: 'rgba(0,0,0,0.88)', backdropFilter: 'blur(12px)' }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >

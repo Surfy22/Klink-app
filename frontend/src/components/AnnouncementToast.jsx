@@ -12,6 +12,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
 
   return (
     <div
+      className="overlay-dark"
       style={{
         position:            'fixed',
         inset:               0,
