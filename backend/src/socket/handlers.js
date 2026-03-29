@@ -288,9 +288,15 @@ module.exports = (io) => {
 
         const bar = getBar(barId);
 
-        // Détection reconnexion : log si la table réutilise un tableId déjà enregistré
-        if (bar.tables[tableId] && bar.tables[tableId].socketId !== socket.id) {
-          console.log(`[KLINK] 🔄 Reconnexion — table "${tableId}" ancien socket=${bar.tables[tableId].socketId} nouveau socket=${socket.id}`);
+        // Reconnexion : annule le délai de grâce et conserve le statut
+        const prevEntry = bar.tables[tableId];
+        if (prevEntry) {
+          if (prevEntry.disconnectTimer) {
+            clearTimeout(prevEntry.disconnectTimer);
+            console.log(`[KLINK] 🔄 Reconnexion dans le délai de grâce — table "${tableId}" socket=${socket.id}`);
+          } else if (prevEntry.socketId !== socket.id) {
+            console.log(`[KLINK] 🔄 Reconnexion — table "${tableId}" ancien socket=${prevEntry.socketId} nouveau socket=${socket.id}`);
+          }
         }
 
         bar.tables[tableId] = {
@@ -298,7 +304,7 @@ module.exports = (io) => {
           pseudo:   pseudo.trim(),
           photo:    photo || null,
           tableId,
-          status:   null,
+          status:   prevEntry?.status ?? null,   // conserve le statut après reconnexion
           joinedAt: new Date().toISOString(),
         };
 
@@ -693,18 +699,26 @@ module.exports = (io) => {
         if (!isAdmin && currentTableId) {
           const entry = bar.tables[currentTableId];
           if (entry && entry.socketId === socket.id) {
-            // Ce socket est bien le courant pour cette table — on peut la retirer
-            delete bar.tables[currentTableId];
-            io.to(currentBarId).emit('tables:updated', getActiveTables(currentBarId));
-            notifyAdmins(io, currentBarId);
-            console.log(`[${currentBarId}] Table ${currentTableId} déconnectée (socket=${socket.id})`);
-          } else {
+            // Délai de grâce 8 s : absorbe les micro-coupures et l'upgrade polling→WS.
+            // Si la table renvoie 'join' avant l'expiration, le timer est annulé.
+            entry.disconnectTimer = setTimeout(() => {
+              const cur = bar.tables[currentTableId];
+              if (cur && cur.socketId === socket.id) {
+                delete bar.tables[currentTableId];
+                io.to(currentBarId).emit('tables:updated', getActiveTables(currentBarId));
+                notifyAdmins(io, currentBarId);
+                console.log(`[${currentBarId}] Table ${currentTableId} retirée après délai de grâce (socket=${socket.id})`);
+                maybeCleanBar(currentBarId);
+              }
+            }, 8000);
+            console.log(`[${currentBarId}] Table ${currentTableId} — délai de grâce 8 s (socket=${socket.id})`);
+          } else if (entry) {
             // Socket obsolète — la table a déjà été ré-enregistrée par un nouveau socket
-            console.log(`[${currentBarId}] Socket obsolète ${socket.id} pour table ${currentTableId} — table conservée (socket actif=${entry?.socketId ?? 'inexistant'})`);
+            console.log(`[${currentBarId}] Socket obsolète ${socket.id} pour table ${currentTableId} — table conservée (socket actif=${entry.socketId})`);
           }
         }
 
-        // Nettoyer le bar s'il est devenu complètement vide
+        // Nettoyer le bar s'il est devenu complètement vide (admin disconnect ou table sans barId)
         maybeCleanBar(currentBarId);
       } catch (err) {
         console.error('[disconnect] erreur :', err.message);

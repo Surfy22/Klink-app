@@ -28,9 +28,11 @@ const io = new Server(server, {
   transports: ['polling', 'websocket'],
   // 2.5 MB suffit pour une JPEG 160×160 en base64 (~30 KB).
   maxHttpBufferSize: 2.5e6,
-  // Ping toutes les 25 s, timeout à 20 s — détection rapide des déconnexions
-  pingInterval: 25000,
-  pingTimeout:  20000,
+  // Ping toutes les 30 s, timeout à 60 s
+  // Avec 4-5 clients en polling simultané, le serveur peut être lent à répondre ;
+  // un timeout trop court provoque des déconnexions fantômes.
+  pingInterval: 30000,
+  pingTimeout:  60000,
 });
 
 app.use(cors({ origin: CORS_ORIGIN }));
