@@ -184,45 +184,21 @@ export default function TablesPage({
           }}
         >
           {leaderboardMessage && (
-            <div className="px-4 pt-3 pb-1">
-              {/* Gradient border wrapper */}
-              <div style={{
-                background:   'linear-gradient(135deg, #00FF87, #00D4FF)',
-                padding:      '1.5px',
-                borderRadius: '16px',
-              }}>
-                <div style={{
-                  background:          'rgba(255,255,255,0.82)',
-                  borderRadius:        '15px',
-                  padding:             '10px 14px',
-                  backdropFilter:      'blur(12px)',
-                  WebkitBackdropFilter:'blur(12px)',
-                }}>
-                  <p style={{
-                    background:           'linear-gradient(135deg, #00C87A, #0099CC)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor:  'transparent',
-                    backgroundClip:       'text',
-                    fontSize:             '11px',
-                    fontWeight:           800,
-                    textTransform:        'uppercase',
-                    letterSpacing:        '0.10em',
-                    margin:               '0 0 4px',
-                  }}>
-                    📢 Message du gérant
-                  </p>
-                  <p style={{
-                    color:      '#0A1628',
-                    fontSize:   '14px',
-                    fontWeight: 600,
-                    lineHeight: 1.4,
-                    margin:     0,
-                  }}>
-                    {leaderboardMessage}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p style={{
+              background:           'linear-gradient(135deg, #00FF87, #00D4FF)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor:  'transparent',
+              backgroundClip:       'text',
+              fontSize:             '20px',
+              fontWeight:           800,
+              textAlign:            'center',
+              lineHeight:           1.3,
+              margin:               '14px 16px 0',
+              filter:               'drop-shadow(0 0 6px rgba(0,255,135,0.35))',
+              wordBreak:            'break-word',
+            }}>
+              {leaderboardMessage}
+            </p>
           )}
 
           <div className="flex items-center justify-between px-4 pt-3 pb-2">

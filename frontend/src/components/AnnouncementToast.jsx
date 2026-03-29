@@ -90,7 +90,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
           margin:        '0 0 20px',
           textShadow:    '0 0 12px rgba(255,255,255,0.6)',
         }}>
-          ⚡ ANNONCE DU BAR ⚡
+          ANNONCE DU BAR
         </p>
 
         {/* Zone message */}

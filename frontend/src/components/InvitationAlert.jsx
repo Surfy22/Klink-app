@@ -35,20 +35,25 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
         ))}
       </div>
 
+      {/* Gradient border wrapper */}
+      <div
+        style={{
+          background:   'linear-gradient(135deg, #00FF87, #00D4FF)',
+          padding:      '1.5px',
+          borderRadius: '25px',
+          boxShadow:    '0 0 28px rgba(0,255,135,0.28), 0 0 56px rgba(0,212,255,0.16), 0 20px 40px rgba(0,0,0,0.30)',
+        }}
+      >
       {/* Carte */}
       <div
         className="relative rounded-3xl p-6 w-full max-w-xs shadow-2xl animate-bounce-in"
         style={{
           background:          'rgba(255,255,255,0.88)',
-          border:              '1.5px solid rgba(0,212,255,0.28)',
+          borderRadius:        '24px',
           backdropFilter:      'blur(24px)',
           WebkitBackdropFilter:'blur(24px)',
-          boxShadow:           '0 0 40px rgba(0,255,135,0.12), 0 20px 40px rgba(0,0,0,0.25)',
         }}
       >
-        {/* Liseré gradient en haut */}
-        <div className="absolute top-0 inset-x-0 h-[2px] rounded-t-3xl"
-             style={{ background: 'linear-gradient(90deg, #00FF87, #00D4FF)' }} />
 
         <div className="text-center mb-5">
           <span
@@ -106,6 +111,7 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             ✅ Accepter
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
