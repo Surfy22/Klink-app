@@ -29,6 +29,7 @@ export default function App() {
   const [announcement, setAnnouncement]             = useState(null);
   const [receivedContact, setReceivedContact]       = useState(null);
   const [connected, setConnected]                   = useState(false);
+  const [senderNotif, setSenderNotif]               = useState(null); // { type: 'queued'|'busy', pseudo }
 
   // Refs stables — jamais recréés, lisibles depuis n'importe quel handler socket
   const userRef    = useRef(null);   // { pseudo, photo } de l'utilisateur courant
@@ -78,6 +79,15 @@ export default function App() {
       setCelebration({ isTie: true, ...tieData });
     };
 
+    const onInviteQueued = ({ targetPseudo }) => {
+      setSenderNotif({ type: 'queued', pseudo: targetPseudo });
+      setTimeout(() => setSenderNotif(null), 5000);
+    };
+    const onInviteBusy = ({ targetPseudo }) => {
+      setSenderNotif({ type: 'busy', pseudo: targetPseudo });
+      setTimeout(() => setSenderNotif(null), 5000);
+    };
+
     // Appelé à chaque connexion (initiale et reconnexion automatique).
     // Émet 'join' pour (ré)enregistrer la table côté serveur.
     const onConnect = () => {
@@ -109,6 +119,8 @@ export default function App() {
     socket.on('bar:announcement',        onAnnouncement);
     socket.on('contact:receive',         onContactReceive);
     socket.on('bet:tie',                 onBetTie);
+    socket.on('invite:queued',           onInviteQueued);
+    socket.on('invite:busy',             onInviteBusy);
 
     return () => {
       // Retire exactement les handlers de cette instance (safe en StrictMode).
@@ -124,6 +136,8 @@ export default function App() {
       socket.off('bar:announcement',        onAnnouncement);
       socket.off('contact:receive',         onContactReceive);
       socket.off('bet:tie',                 onBetTie);
+      socket.off('invite:queued',           onInviteQueued);
+      socket.off('invite:busy',             onInviteBusy);
       socket.disconnect();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -193,10 +207,15 @@ export default function App() {
   }, [barId, tableId, pendingInvite]);
 
   const closeCelebration = useCallback(() => {
-    if (celebration?.isBet) setBetPending(celebration);
+    if (celebration?.isBet) {
+      setBetPending(celebration);
+    } else if (!celebration?.isTie) {
+      // Invitation simple (non-pari) : libérer le statut "En jeu"
+      socket.emit('table:status', { barId, tableId, status: null });
+    }
     setCelebration(null);
     setScreen('tables');
-  }, [celebration]);
+  }, [celebration, barId, tableId]);
 
   const handleBetResult = useCallback((winnerPseudo, winnerTableId, winnerPhoto) => {
     if (!betPending) return;
@@ -237,6 +256,7 @@ export default function App() {
           inviteResponse={inviteResponse}
           announcement={announcement}
           onDismissAnnouncement={() => setAnnouncement(null)}
+          senderNotif={senderNotif}
         />
       )}
 

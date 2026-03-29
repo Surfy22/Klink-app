@@ -147,7 +147,8 @@ function getBar(barId) {
       stats:              { invitesSent: 0, betsInProgress: 0 },
       scores:             {},
       resolvedBets:       new Map(),
-      pendingVotes:       {},   // { [betId]: { voterTableId, winnerTableId, winnerPseudo, winnerPhoto } }
+      pendingVotes:       {},         // { [betId]: { voterTableId, winnerTableId, winnerPseudo, winnerPhoto } }
+      inviteQueues:       {},         // { [toTableId]: [{ fromTableId, fromPseudo, fromPhoto, message }, ...] }
       adminSockets:       new Set(),
       leaderboardMessage: '',
       adminPassword,
@@ -227,8 +228,9 @@ function resetBar(barId) {
 
   bar.stats        = { invitesSent: 0, betsInProgress: 0 };
   bar.scores       = {};
-  bar.resolvedBets = new Map();   // réinitialise aussi la Map (pas de fuite)
+  bar.resolvedBets = new Map();
   bar.pendingVotes = {};
+  bar.inviteQueues = {};
 
   if (_io) {
     _io.to(barId).emit('scores:updated', {});
@@ -314,6 +316,12 @@ module.exports = (io) => {
         io.to(barId).emit('tables:updated', getActiveTables(barId));
         socket.emit('scores:updated', bar.scores);
 
+        // Si une invitation était en attente lors de la déconnexion, la re-livrer
+        const reconnectQueue = bar.inviteQueues[tableId];
+        if (reconnectQueue && reconnectQueue.length > 0) {
+          socket.emit('invite:receive', reconnectQueue[0]);
+        }
+
         if (bar.leaderboardMessage) {
           socket.emit('bar:leaderboard-message', { message: bar.leaderboardMessage });
         }
@@ -363,14 +371,31 @@ module.exports = (io) => {
         const target = bar.tables[toTableId];
         if (!target) return;
 
+        const inviteData = {
+          fromTableId,
+          fromPseudo: isStr(fromPseudo, 30) ? fromPseudo.trim() : '?',
+          fromPhoto:  isValidPhoto(fromPhoto) ? fromPhoto : null,
+          message:    message.trim(),
+        };
+
         bar.stats.invitesSent++;
         recordInviteSent(barId, message);
-        io.to(target.socketId).emit('invite:receive', {
-          fromTableId,
-          fromPseudo:  isStr(fromPseudo, 30) ? fromPseudo.trim() : '?',
-          fromPhoto:   isValidPhoto(fromPhoto) ? fromPhoto : null,
-          message:     message.trim(),
-        });
+
+        if (!bar.inviteQueues[toTableId] || bar.inviteQueues[toTableId].length === 0) {
+          // Aucune invitation en cours → livraison immédiate
+          bar.inviteQueues[toTableId] = [inviteData];
+          io.to(target.socketId).emit('invite:receive', inviteData);
+          console.log(`[${barId}] invite:send — livraison immédiate à table "${toTableId}"`);
+        } else {
+          // Invitation déjà en cours → mise en file d'attente
+          bar.inviteQueues[toTableId].push(inviteData);
+          const pos    = bar.inviteQueues[toTableId].length;
+          const sender = bar.tables[fromTableId];
+          if (sender) {
+            io.to(sender.socketId).emit('invite:queued', { targetPseudo: target.pseudo, position: pos });
+          }
+          console.log(`[${barId}] invite:send — file d'attente position ${pos} pour table "${toTableId}"`);
+        }
         notifyAdmins(io, barId);
       } catch (err) {
         console.error('[invite:send] erreur :', err.message);
@@ -428,6 +453,23 @@ module.exports = (io) => {
 
           if (sender)    io.to(sender.socketId).emit('invite:accepted', celebration);
           if (responder) io.to(responder.socketId).emit('invite:accepted', celebration);
+
+          // Annuler les invitations en file d'attente pour les autres expéditeurs
+          const queueOnAccept = bar.inviteQueues[toTableId];
+          if (queueOnAccept) {
+            for (const inv of queueOnAccept.slice(1)) {
+              const waitingSender = bar.tables[inv.fromTableId];
+              if (waitingSender) {
+                io.to(waitingSender.socketId).emit('invite:busy', { targetPseudo: responder?.pseudo ?? toTableId });
+              }
+            }
+            delete bar.inviteQueues[toTableId];
+          }
+
+          // Marquer les deux tables comme "En jeu"
+          if (bar.tables[fromTableId]) bar.tables[fromTableId].status = 'En jeu';
+          if (bar.tables[toTableId])   bar.tables[toTableId].status   = 'En jeu';
+          io.to(barId).emit('tables:updated', getActiveTables(barId));
           notifyAdmins(io, barId);
           console.log(`[${barId}] Invitation acceptée — ${fromTableId}↔${toTableId} — isBet:${isBet}`);
         } else {
@@ -437,6 +479,22 @@ module.exports = (io) => {
               responderPseudo: responder?.pseudo ?? toTableId,
               accepted:        false,
             });
+          }
+
+          // Passer à l'invitation suivante dans la file
+          const queueOnDecline = bar.inviteQueues[toTableId];
+          if (queueOnDecline) {
+            queueOnDecline.shift();
+            if (queueOnDecline.length > 0) {
+              const next        = queueOnDecline[0];
+              const targetTable = bar.tables[toTableId];
+              if (targetTable) {
+                io.to(targetTable.socketId).emit('invite:receive', next);
+                console.log(`[${barId}] File d'attente — livraison de la prochaine invitation à "${toTableId}"`);
+              }
+            } else {
+              delete bar.inviteQueues[toTableId];
+            }
           }
         }
       } catch (err) {
@@ -495,7 +553,14 @@ module.exports = (io) => {
           bar.scores[winnerPseudo].photo = photoToStore;
           console.log(`[${barId}] Photo classement "${winnerPseudo}" : ${photoToStore ? 'présente' : 'absente'} (source=${storedPhoto !== null ? 'serveur' : 'client'})`);
 
+          // Libérer le statut "En jeu" des deux tables
+          const t1accord = firstVote.voterTableId;
+          const t2accord = currentTableId;
+          if (bar.tables[t1accord]?.status === 'En jeu') bar.tables[t1accord].status = null;
+          if (bar.tables[t2accord]?.status === 'En jeu') bar.tables[t2accord].status = null;
+
           io.to(barId).emit('scores:updated', bar.scores);
+          io.to(barId).emit('tables:updated', getActiveTables(barId));
           notifyAdmins(io, barId);
           console.log(`[${barId}] Pari résolu — vainqueur : ${winnerPseudo}`);
 
@@ -503,6 +568,10 @@ module.exports = (io) => {
           // ── Désaccord — égalité ──────────────────────────────────────────────
           const voter1 = bar.tables[firstVote.voterTableId];
           const voter2 = bar.tables[currentTableId];
+
+          // Libérer le statut "En jeu" (désaccord = retour à l'état normal)
+          if (voter1?.status === 'En jeu') voter1.status = null;
+          if (voter2?.status === 'En jeu') voter2.status = null;
 
           const tieEvent = {
             betId,
@@ -520,6 +589,7 @@ module.exports = (io) => {
 
           if (voter1) io.to(voter1.socketId).emit('bet:tie', tieEvent);
           if (voter2) io.to(voter2.socketId).emit('bet:tie', tieEvent);
+          io.to(barId).emit('tables:updated', getActiveTables(barId));
           notifyAdmins(io, barId);
           console.log(`[${barId}] Égalité pari ${betId} — table "${firstVote.voterTableId}" vs "${currentTableId}" ne s'accordent pas`);
         }
@@ -704,6 +774,17 @@ module.exports = (io) => {
             entry.disconnectTimer = setTimeout(() => {
               const cur = bar.tables[currentTableId];
               if (cur && cur.socketId === socket.id) {
+                // Annuler la file d'invitations en attente pour cette table
+                const pendingQueue = bar.inviteQueues[currentTableId];
+                if (pendingQueue) {
+                  for (const inv of pendingQueue) {
+                    const waitingSender = bar.tables[inv.fromTableId];
+                    if (waitingSender) {
+                      io.to(waitingSender.socketId).emit('invite:busy', { targetPseudo: cur.pseudo });
+                    }
+                  }
+                  delete bar.inviteQueues[currentTableId];
+                }
                 delete bar.tables[currentTableId];
                 io.to(currentBarId).emit('tables:updated', getActiveTables(currentBarId));
                 notifyAdmins(io, currentBarId);

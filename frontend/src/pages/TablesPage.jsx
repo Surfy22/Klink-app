@@ -53,6 +53,7 @@ export default function TablesPage({
   pendingInvite, onAcceptInvite, onDeclineInvite,
   inviteResponse,
   announcement, onDismissAnnouncement,
+  senderNotif,
 }) {
   const [showQR, setShowQR] = useState(false);
   const topScores = Object.entries(scores)
@@ -148,7 +149,21 @@ export default function TablesPage({
                     <Avatar pseudo={table.pseudo} photo={table.photo} size={52} active />
                     <div className="min-w-0">
                       <p className="text-white font-bold truncate">{table.pseudo}</p>
-                      <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {table.tableId}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-xs" style={{ color: '#4A6FA5' }}>Table {table.tableId}</p>
+                        {table.status === 'En jeu' && (
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded-full font-bold leading-none"
+                            style={{
+                              background: 'rgba(255,150,0,0.13)',
+                              color:      '#FF9500',
+                              border:     '1px solid rgba(255,150,0,0.35)',
+                            }}
+                          >
+                            🍺 En jeu
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -156,11 +171,13 @@ export default function TablesPage({
                     onClick={() => onInvite(table)}
                     className="shrink-0 px-4 py-2.5 rounded-xl font-black text-sm text-black transition-all active:scale-95"
                     style={{
-                      background: 'linear-gradient(135deg, #00FF87, #00D4FF)',
+                      background: table.status === 'En jeu'
+                        ? 'linear-gradient(135deg, rgba(0,255,135,0.55), rgba(0,212,255,0.55))'
+                        : 'linear-gradient(135deg, #00FF87, #00D4FF)',
                       boxShadow:  '0 2px 14px rgba(0,255,135,0.30)',
                     }}
                   >
-                    Inviter
+                    {table.status === 'En jeu' ? 'Inviter quand même' : 'Inviter'}
                   </button>
                 </div>
               ))}
@@ -265,6 +282,30 @@ export default function TablesPage({
           </>
         )}
       </footer>
+
+      {/* Toast expéditeur : invitation en file ou table occupée */}
+      {senderNotif && (
+        <div
+          className="fixed top-4 left-1/2 -translate-x-1/2 z-40 px-4 py-3 rounded-2xl text-sm font-semibold flex items-center gap-2 max-w-[88vw]"
+          style={{
+            background:     senderNotif.type === 'queued'
+              ? 'rgba(240,244,255,0.95)' : 'rgba(240,244,255,0.95)',
+            border:         senderNotif.type === 'queued'
+              ? '1px solid rgba(0,212,255,0.40)' : '1px solid rgba(255,150,0,0.40)',
+            backdropFilter: 'blur(14px)',
+            color:          senderNotif.type === 'queued' ? '#00D4FF' : '#FF9500',
+            boxShadow:      '0 4px 20px rgba(0,0,0,0.12)',
+          }}
+        >
+          {senderNotif.type === 'queued' ? '⏳' : '🍺'}
+          <span style={{ color: '#0A1628' }}>
+            {senderNotif.type === 'queued'
+              ? <><span style={{ fontWeight: 900 }}>{senderNotif.pseudo}</span> reçoit déjà une invitation — la tienne est en attente</>
+              : <><span style={{ fontWeight: 900 }}>{senderNotif.pseudo}</span> a rejoint une autre table</>
+            }
+          </span>
+        </div>
+      )}
 
       {/* Toast refus */}
       {inviteResponse && !inviteResponse.accepted && (
