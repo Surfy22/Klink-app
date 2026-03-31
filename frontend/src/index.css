@@ -190,23 +190,10 @@ h1, h2, h3 {
   to   { opacity: 1; transform: translateX(0)     scaleY(1);    }
 }
 
-/* Cascade d'apparition verticale des cartes */
-@keyframes card-cascade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0);    }
-}
-
-/* Toggle indicator — compression pendant le glissement */
-@keyframes tabSlideLeft {
-  0%   { transform: translateX(100%) scale(1); }
-  50%  { transform: translateX(50%) scaleX(0.85) scaleY(0.92); }
-  100% { transform: translateX(0%) scale(1); }
-}
-
-@keyframes tabSlideRight {
-  0%   { transform: translateX(0%) scale(1); }
-  50%  { transform: translateX(50%) scaleX(0.85) scaleY(0.92); }
-  100% { transform: translateX(100%) scale(1); }
+/* Vague horizontale des cartes par rangée */
+@keyframes card-wave-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0);    }
 }
 
 /* Rebond physique au tap sur une carte */

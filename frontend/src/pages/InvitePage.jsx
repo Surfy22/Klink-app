@@ -102,7 +102,7 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
       height:    '100%',
       boxSizing: 'border-box',
       animation: enterAnimClass
-        ? `${enterAnimClass} 280ms cubic-bezier(0.34, 1.3, 0.64, 1) ${enterDelay}ms both`
+        ? `${enterAnimClass} 320ms cubic-bezier(0.34, 1.3, 0.64, 1) ${enterDelay}ms both`
         : 'none',
     }}>
       {/* Bouton : tap bounce */}
@@ -173,8 +173,6 @@ export default function InvitePage({ user, target, onSend, onBack }) {
   const [sending,      setSending]      = useState(false);
   const [gridScale,    setGridScale]    = useState(1);
   const [scaleTiming,  setScaleTiming]  = useState('none');
-  const [tabAnim,      setTabAnim]      = useState(null); // 'tabSlideLeft' | 'tabSlideRight' | null
-  const [tabAnimKey,   setTabAnimKey]   = useState(0);   // incrémenté pour rejouer l'animation
   const lockRef = useRef(false);
 
   function getMessage() {
@@ -206,10 +204,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
       setGridScale(1);
     }, 150);
 
-    // Indicateur : animation de compression selon la direction
-    setTabAnim(goingRight ? 'tabSlideRight' : 'tabSlideLeft');
-    setTabAnimKey(k => k + 1);
-    setToggleMode(next);                // label bascule immédiatement
+    setToggleMode(next);                // indicateur glisse immédiatement
     setExitDir(goingRight ? -1 : 1);   // cartes actuelles sortent vers la gauche si on va à droite
     setEnterFromRight(goingRight);      // nouvelles cartes entrent depuis la droite
     setAnimPhase('exit');
@@ -232,9 +227,9 @@ export default function InvitePage({ user, target, onSend, onBack }) {
     transition: 'transform 250ms ease-in, opacity 250ms ease-in',
   } : {};
 
-  // Cascade synchronisée : démarre 200ms après le switch (toggle finit son slide)
-  const CARD_GLOBAL_DELAY = 200;
-  const enterAnimClass = animPhase === 'enter' ? 'card-cascade-in' : null;
+  // Vague horizontale : 180ms délai global + 120ms entre les deux rangées
+  const enterAnimClass = animPhase === 'enter' ? 'card-wave-in' : null;
+  function cardEnterDelay(i) { return 180 + Math.floor(i / 2) * 120; }
 
   const items = displayMode === 'defi' ? QUICK_MESSAGES : PRESET_BETS;
 
@@ -290,27 +285,19 @@ export default function InvitePage({ user, target, onSend, onBack }) {
               border:       '1px solid #E8EDF5',
             }}
           >
-            {/* Indicateur absolu qui glisse avec compression */}
-            <div
-              key={tabAnimKey}
-              style={{
-                position:     'absolute',
-                top:          4,
-                bottom:       4,
-                left:         4,
-                width:        'calc(50% - 4px)',
-                background:   'linear-gradient(135deg, #1CC88A, #00B4D8)',
-                borderRadius: 10,
-                // Fin de course : position statique quand pas d'animation
-                transform:    tabAnim
-                  ? undefined
-                  : (toggleMode === 'defi' ? 'translateX(0)' : 'translateX(100%)'),
-                animation:    tabAnim
-                  ? `${tabAnim} 450ms cubic-bezier(0.34, 1.2, 0.64, 1) forwards`
-                  : 'none',
-                pointerEvents:'none',
-              }}
-            />
+            {/* Indicateur absolu qui glisse */}
+            <div style={{
+              position:     'absolute',
+              top:          4,
+              bottom:       4,
+              left:         4,
+              width:        'calc(50% - 4px)',
+              background:   'linear-gradient(135deg, #1CC88A, #00B4D8)',
+              borderRadius: 10,
+              transform:    toggleMode === 'defi' ? 'translateX(0)' : 'translateX(100%)',
+              transition:   'transform 450ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+              pointerEvents:'none',
+            }} />
 
             {/* Labels au-dessus de l'indicateur */}
             {[
@@ -368,7 +355,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
                   }
                 }}
                 enterAnimClass={enterAnimClass}
-                enterDelay={CARD_GLOBAL_DELAY + i * 80}
+                enterDelay={cardEnterDelay(i)}
               />
             ))}
           </div>
@@ -398,10 +385,24 @@ export default function InvitePage({ user, target, onSend, onBack }) {
           >
             {sending ? 'Envoi…' : (
               <>
-                Envoyer l'invitation{' '}
-                <span style={message && !sending ? {
-                  textShadow: '0 0 8px rgba(28,200,138,0.9), 0 0 16px rgba(0,180,216,0.6)',
-                } : {}}>🔌</span>
+                Envoyer l'invitation
+                <svg
+                  width="18" height="18" viewBox="0 0 18 18" fill="none"
+                  style={{
+                    marginLeft: 8,
+                    flexShrink: 0,
+                    filter: (message && !sending)
+                      ? 'drop-shadow(0 0 4px rgba(255,255,255,0.9)) drop-shadow(0 0 10px rgba(28,200,138,0.8)) drop-shadow(0 0 20px rgba(0,180,216,0.6))'
+                      : 'none',
+                  }}
+                >
+                  {/* Corps arrondi */}
+                  <rect x="3" y="7" width="12" height="9" rx="3" stroke="white" strokeWidth="1.5" />
+                  {/* Broche gauche */}
+                  <rect x="6" y="2" width="2" height="6" rx="1" fill="white" />
+                  {/* Broche droite */}
+                  <rect x="10" y="2" width="2" height="6" rx="1" fill="white" />
+                </svg>
               </>
             )}
           </button>
