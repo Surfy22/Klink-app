@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Avatar from '../components/Avatar';
 
-/* ── Données ──────────────────────────────────────────────────────────────── */
+/* ── Données ─────────────────────────────────────────────────────────────── */
 
 const QUICK_MESSAGES = [
   { emoji: '🎯', text: 'On vous défie aux fléchettes !' },
@@ -71,87 +71,110 @@ const ICONS = {
   },
 };
 
-/* ── Carte ──────────────────────────────────────────────────────────────── */
+/* ── Carte ───────────────────────────────────────────────────────────────── */
 
-function Card({ emojiKey, text, selected, onClick }) {
-  const [bouncing, setBouncing] = useState(false);
+function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay }) {
+  const [iconBouncing, setIconBouncing] = useState(false);
+  const [tapping,      setTapping]      = useState(false);
+  const [shimmer,      setShimmer]      = useState(false);
   const icon = ICONS[emojiKey];
 
   function handleClick() {
+    // Tap bounce (toujours)
+    setTapping(true);
+    setTimeout(() => setTapping(false), 300);
+
+    // Shimmer + icône uniquement à la sélection
     if (!selected) {
-      setBouncing(true);
-      setTimeout(() => setBouncing(false), 500);
+      setShimmer(true);
+      setTimeout(() => setShimmer(false), 450);
+
+      setIconBouncing(true);
+      setTimeout(() => setIconBouncing(false), 500);
     }
+
     onClick();
   }
 
   return (
-    <button
-      onClick={handleClick}
-      className="text-left"
-      style={{
-        background:   selected
-          ? 'linear-gradient(135deg, rgba(28,200,138,0.12), rgba(0,180,216,0.08))'
-          : '#FFFFFF',
-        border:       selected ? '2px solid #1CC88A' : '1.5px solid #E8EDF5',
-        borderRadius: 18,
-        padding:      18,
-        boxShadow:    selected
-          ? '0 0 0 4px rgba(28,200,138,0.15), inset 0 1px 3px rgba(28,200,138,0.20)'
-          : '0 2px 12px rgba(0,0,0,0.06)',
-        transition:   'all 200ms ease',
-        transform:    'scale(1)',
-      }}
-      onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-      onMouseUp={(e)   => { e.currentTarget.style.transform = 'scale(1.02)'; setTimeout(() => { e.currentTarget.style.transform = 'scale(1)'; }, 100); }}
-      onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-      onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
-      onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1.02)'; setTimeout(() => { if (e.currentTarget) e.currentTarget.style.transform = 'scale(1)'; }, 100); }}
-    >
-      {/* Icône dans cercle coloré */}
-      <div
+    // Wrapper d'entrée : translateX + scaleY sans conflit avec les autres transforms
+    <div style={{
+      animation: enterAnimClass
+        ? `${enterAnimClass} 300ms ease-out ${enterDelay}ms both`
+        : 'none',
+    }}>
+      {/* Bouton : tap bounce */}
+      <button
+        onClick={handleClick}
+        className={shimmer ? 'card-shimmer' : ''}
         style={{
-          width: 48, height: 48,
-          borderRadius: '50%',
-          background: icon.bg,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          marginBottom: 10,
-          animation: bouncing ? 'icon-bounce 450ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
+          position:     'relative',
+          overflow:     'hidden',
+          width:        '100%',
+          textAlign:    'left',
+          cursor:       'pointer',
+          background:   selected
+            ? 'linear-gradient(135deg, rgba(28,200,138,0.15), rgba(0,180,216,0.10))'
+            : '#FFFFFF',
+          border:       selected ? '2px solid #1CC88A' : '1.5px solid #E8EDF5',
+          borderRadius: 18,
+          padding:      18,
+          boxShadow:    selected
+            ? '0 0 0 3px rgba(28,200,138,0.12), 0 4px 16px rgba(28,200,138,0.25), inset 0 1px 0 rgba(255,255,255,0.80)'
+            : '0 2px 12px rgba(0,0,0,0.06)',
+          transition:   'background 200ms ease, border 200ms ease, box-shadow 200ms ease',
+          animation:    tapping ? 'card-tap-bounce 280ms both' : 'none',
         }}
       >
-        {icon.svg}
-      </div>
+        {/* Icône dans cercle coloré */}
+        <div style={{
+          width:         48,
+          height:        48,
+          borderRadius:  '50%',
+          background:    icon.bg,
+          display:       'flex',
+          alignItems:    'center',
+          justifyContent:'center',
+          marginBottom:  10,
+          animation:     iconBouncing
+            ? 'icon-bounce 450ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+            : 'none',
+        }}>
+          {icon.svg}
+        </div>
 
-      <span
-        style={{
+        <span style={{
           fontSize:   14,
           fontWeight: selected ? 600 : 500,
           color:      selected ? '#0d9e6e' : '#1a1a2e',
           lineHeight: 1.4,
           display:    'block',
-        }}
-      >
-        {text}
-      </span>
-    </button>
+        }}>
+          {text}
+        </span>
+      </button>
+    </div>
   );
 }
 
 /* ── Page principale ─────────────────────────────────────────────────────── */
 
 export default function InvitePage({ user, target, onSend, onBack }) {
-  const [mode, setMode]               = useState('defi');
-  const [slideAnim, setSlideAnim]     = useState('slide-in-right');
+  const [displayMode,  setDisplayMode]  = useState('defi');
+  const [animPhase,    setAnimPhase]    = useState('idle'); // 'idle' | 'exit' | 'enter'
+  const [exitDir,      setExitDir]      = useState(-1);    // -1=sortie gauche, +1=sortie droite
+  const [enterFromRight, setEnterFromRight] = useState(true); // direction d'entrée
   const [selectedDefi, setSelectedDefi] = useState(null);
   const [selectedPari, setSelectedPari] = useState(null);
-  const [sending, setSending]         = useState(false);
+  const [sending,      setSending]      = useState(false);
+  const lockRef = useRef(false);
 
   function getMessage() {
-    if (mode === 'defi' && selectedDefi !== null) {
+    if (displayMode === 'defi' && selectedDefi !== null) {
       const q = QUICK_MESSAGES[selectedDefi];
       return `${q.emoji} ${q.text}`;
     }
-    if (mode === 'pari' && selectedPari !== null) {
+    if (displayMode === 'pari' && selectedPari !== null) {
       return `🍺 ${PRESET_BETS[selectedPari].text}`;
     }
     return null;
@@ -159,11 +182,42 @@ export default function InvitePage({ user, target, onSend, onBack }) {
 
   const message = getMessage();
 
+  // Mode actif du toggle (suit displayMode sauf pendant la phase exit)
+  const [toggleMode, setToggleMode] = useState('defi');
+
   function switchMode(next) {
-    if (next === mode) return;
-    setSlideAnim(next === 'pari' ? 'slide-in-right' : 'slide-in-left');
-    setMode(next);
+    if (next === displayMode || lockRef.current) return;
+    lockRef.current = true;
+
+    const goingRight = next === 'pari';
+    setToggleMode(next);                // indicateur glisse immédiatement
+    setExitDir(goingRight ? -1 : 1);   // cartes actuelles sortent vers la gauche si on va à droite
+    setEnterFromRight(goingRight);      // nouvelles cartes entrent depuis la droite
+    setAnimPhase('exit');
+
+    setTimeout(() => {
+      setDisplayMode(next);
+      setAnimPhase('enter');
+
+      setTimeout(() => {
+        setAnimPhase('idle');
+        lockRef.current = false;
+      }, 300 + 180 + 80);
+    }, 250);
   }
+
+  // Style du conteneur de cartes pendant la phase exit
+  const gridExitStyle = animPhase === 'exit' ? {
+    transform:  `translateX(${exitDir * 30}px) scaleY(0.96)`,
+    opacity:    0,
+    transition: 'transform 250ms ease-in, opacity 250ms ease-in',
+  } : {};
+
+  const enterAnimClass = animPhase === 'enter'
+    ? (enterFromRight ? 'card-slide-in-right' : 'card-slide-in-left')
+    : null;
+
+  const items = displayMode === 'defi' ? QUICK_MESSAGES : PRESET_BETS;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
@@ -206,11 +260,32 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             </div>
           </div>
 
-          {/* Toggle Défi / Pari bière */}
+          {/* ── Toggle avec indicateur glissant ── */}
           <div
-            className="flex p-1 gap-1"
-            style={{ background: '#F0F4FF', borderRadius: 14, border: '1px solid #E8EDF5' }}
+            style={{
+              position:     'relative',
+              display:      'flex',
+              padding:      4,
+              background:   '#F0F4FF',
+              borderRadius: 14,
+              border:       '1px solid #E8EDF5',
+            }}
           >
+            {/* Indicateur absolu qui glisse */}
+            <div style={{
+              position:     'absolute',
+              top:          4,
+              bottom:       4,
+              left:         4,
+              width:        'calc(50% - 4px)',
+              background:   'linear-gradient(135deg, #1CC88A, #00B4D8)',
+              borderRadius: 10,
+              transform:    toggleMode === 'defi' ? 'translateX(0)' : 'translateX(100%)',
+              transition:   'transform 500ms cubic-bezier(0.34, 1.20, 0.64, 1)',
+              pointerEvents:'none',
+            }} />
+
+            {/* Labels au-dessus de l'indicateur */}
             {[
               { key: 'defi', label: 'Défi' },
               { key: 'pari', label: 'Pari bière 🍺' },
@@ -218,14 +293,19 @@ export default function InvitePage({ user, target, onSend, onBack }) {
               <button
                 key={key}
                 onClick={() => switchMode(key)}
-                className="flex-1 py-2 text-sm font-bold"
                 style={{
+                  flex:         1,
+                  position:     'relative',
+                  zIndex:       1,
+                  padding:      '8px 0',
+                  fontSize:     14,
+                  fontWeight:   700,
+                  color:        toggleMode === key ? '#fff' : '#9CA3AF',
+                  background:   'transparent',
+                  border:       'none',
+                  cursor:       'pointer',
+                  transition:   'color 300ms ease',
                   borderRadius: 10,
-                  background:   mode === key
-                    ? 'linear-gradient(135deg, #1CC88A, #00B4D8)'
-                    : 'transparent',
-                  color:        mode === key ? '#fff' : '#9CA3AF',
-                  transition:   'all 300ms cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
                 {label}
@@ -233,35 +313,31 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             ))}
           </div>
 
-          {/* Grille 2×2 — key force remount + animation au switch */}
+          {/* ── Grille 2×2 avec animation d'exit ── */}
           <div
-            key={mode}
             className="grid grid-cols-2 gap-3"
-            style={{ animation: `${slideAnim} 300ms ease both` }}
+            style={gridExitStyle}
           >
-            {mode === 'defi'
-              ? QUICK_MESSAGES.map((msg, i) => (
-                  <Card
-                    key={i}
-                    emojiKey={msg.emoji}
-                    text={msg.text}
-                    selected={selectedDefi === i}
-                    onClick={() => setSelectedDefi(selectedDefi === i ? null : i)}
-                  />
-                ))
-              : PRESET_BETS.map((bet, i) => (
-                  <Card
-                    key={i}
-                    emojiKey={bet.emoji}
-                    text={bet.text}
-                    selected={selectedPari === i}
-                    onClick={() => setSelectedPari(selectedPari === i ? null : i)}
-                  />
-                ))
-            }
+            {items.map((item, i) => (
+              <Card
+                key={`${displayMode}-${i}`}
+                emojiKey={item.emoji}
+                text={item.text}
+                selected={displayMode === 'defi' ? selectedDefi === i : selectedPari === i}
+                onClick={() => {
+                  if (displayMode === 'defi') {
+                    setSelectedDefi(selectedDefi === i ? null : i);
+                  } else {
+                    setSelectedPari(selectedPari === i ? null : i);
+                  }
+                }}
+                enterAnimClass={enterAnimClass}
+                enterDelay={i * 60}
+              />
+            ))}
           </div>
 
-          {/* Bouton CTA */}
+          {/* ── Bouton CTA ── */}
           <button
             onClick={() => {
               if (!message || sending) return;
@@ -269,7 +345,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
               onSend(message);
             }}
             disabled={!message || sending}
-            className="w-full py-4 rounded-2xl font-black text-lg"
+            className="w-full py-4 rounded-2xl font-black text-lg flex items-center justify-center gap-2"
             style={(message && !sending) ? {
               background: 'linear-gradient(135deg, #1CC88A, #00B4D8)',
               color:      '#fff',
@@ -283,7 +359,14 @@ export default function InvitePage({ user, target, onSend, onBack }) {
               cursor:     'not-allowed',
             }}
           >
-            {sending ? 'Envoi…' : "Envoyer l'invitation 🚀"}
+            {sending ? 'Envoi…' : (
+              <>
+                Envoyer l'invitation
+                <svg width="14" height="14" viewBox="0 0 10 14" style={{ marginLeft: 8, flexShrink: 0 }}>
+                  <polygon points="6,0 0,8 5,8 4,14 10,6 5,6" fill={message ? 'white' : 'rgba(10,22,40,0.28)'} />
+                </svg>
+              </>
+            )}
           </button>
         </div>
       </main>
