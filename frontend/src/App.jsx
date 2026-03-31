@@ -46,6 +46,7 @@ export default function App() {
   const [receivedContact, setReceivedContact]       = useState(null);
   const [connected, setConnected]                   = useState(false);
   const [senderNotif, setSenderNotif]               = useState(null); // { type: 'queued'|'busy', pseudo }
+  const [joinError, setJoinError]                   = useState(null);
 
   // Refs stables — jamais recréés, lisibles depuis n'importe quel handler socket
   const userRef    = useRef(null);   // { pseudo, photo } de l'utilisateur courant
@@ -95,6 +96,14 @@ export default function App() {
       setCelebration({ isTie: true, ...tieData });
     };
 
+    const onJoinError = ({ message }) => {
+      setScreen('join');
+      hasJoined.current = false;
+      userRef.current   = null;
+      socket.disconnect();
+      setJoinError(message);
+    };
+
     const onInviteQueued = ({ targetPseudo }) => {
       setSenderNotif({ type: 'queued', pseudo: targetPseudo });
       setTimeout(() => setSenderNotif(null), 5000);
@@ -138,6 +147,7 @@ export default function App() {
     socket.on('bet:tie',                 onBetTie);
     socket.on('invite:queued',           onInviteQueued);
     socket.on('invite:busy',             onInviteBusy);
+    socket.on('join:error',              onJoinError);
 
     return () => {
       // Retire exactement les handlers de cette instance (safe en StrictMode).
@@ -155,6 +165,7 @@ export default function App() {
       socket.off('bet:tie',                 onBetTie);
       socket.off('invite:queued',           onInviteQueued);
       socket.off('invite:busy',             onInviteBusy);
+      socket.off('join:error',              onJoinError);
       socket.disconnect();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -162,6 +173,7 @@ export default function App() {
   const handleJoin = useCallback((pseudo, photo) => {
     initAudio(); // déverrouille AudioContext pendant le geste utilisateur
 
+    setJoinError(null);
     userRef.current  = { pseudo, photo };
     // On marque hasJoined = true AVANT connect() pour que onConnect()
     // envoie le 'join' dès que la connexion est établie.
@@ -252,7 +264,7 @@ export default function App() {
   }, [betPending]);
 
   if (screen === 'join') {
-    return <JoinPage tableId={tableId} onJoin={handleJoin} />;
+    return <JoinPage tableId={tableId} onJoin={handleJoin} joinError={joinError} />;
   }
 
   return (

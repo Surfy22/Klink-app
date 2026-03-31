@@ -5,6 +5,7 @@
  *   stats:             { invitesSent, betsInProgress }
  *   scores:            { [pseudo]: { wins, tableId } }
  *   resolvedBets:      Map<betId, timestamp>   (horodatés pour purge)
+ *   reservedNames:     { [pseudoNormalisé]: tableId }  (noms réservés jusqu'au reset)
  *   adminSockets:      Set<socketId>
  *   leaderboardMessage: string
  *   adminPassword:     string  (6 car. alphanum. majuscules, généré à la création)
@@ -149,6 +150,7 @@ function getBar(barId) {
       resolvedBets:       new Map(),
       pendingVotes:       {},         // { [betId]: { voterTableId, winnerTableId, winnerPseudo, winnerPhoto } }
       inviteQueues:       {},         // { [toTableId]: [{ fromTableId, fromPseudo, fromPhoto, message }, ...] }
+      reservedNames:      {},         // { [pseudoNormalisé]: tableId } — réservés jusqu'au reset
       adminSockets:       new Set(),
       leaderboardMessage: '',
       adminPassword,
@@ -226,11 +228,12 @@ function resetBar(barId) {
   });
   if (history[barId].length > 30) history[barId].shift();
 
-  bar.stats        = { invitesSent: 0, betsInProgress: 0 };
-  bar.scores       = {};
-  bar.resolvedBets = new Map();
-  bar.pendingVotes = {};
-  bar.inviteQueues = {};
+  bar.stats          = { invitesSent: 0, betsInProgress: 0 };
+  bar.scores         = {};
+  bar.resolvedBets   = new Map();
+  bar.pendingVotes   = {};
+  bar.inviteQueues   = {};
+  bar.reservedNames  = {};
 
   if (_io) {
     _io.to(barId).emit('scores:updated', {});
@@ -302,6 +305,15 @@ module.exports = (io) => {
         socket.join(barId);
 
         const bar = getBar(barId);
+
+        // Vérifie l'unicité du nom jusqu'au reset de minuit
+        const normalizedPseudo = pseudo.trim().toLowerCase();
+        const reservedBy = bar.reservedNames[normalizedPseudo];
+        if (reservedBy && reservedBy !== tableId) {
+          socket.emit('join:error', { message: '⚡ Ce nom est déjà pris ce soir ! Choisis un autre nom.' });
+          return;
+        }
+        bar.reservedNames[normalizedPseudo] = tableId;
 
         // Reconnexion : annule le délai de grâce et conserve le statut
         const prevEntry = bar.tables[tableId];

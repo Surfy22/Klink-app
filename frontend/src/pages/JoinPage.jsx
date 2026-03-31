@@ -4,7 +4,7 @@ import Avatar from '../components/Avatar';
 import CameraCapture from '../components/CameraCapture';
 import KlinkLogo from '../components/KlinkLogo';
 
-export default function JoinPage({ tableId, onJoin }) {
+export default function JoinPage({ tableId, onJoin, joinError }) {
   const [pseudo, setPseudo]         = useState(() => generateName());
   const [photo, setPhoto]           = useState(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -101,6 +101,16 @@ export default function JoinPage({ tableId, onJoin }) {
               30 caractères · visible par les autres tables
             </p>
           </div>
+
+          {/* Erreur nom déjà pris */}
+          {joinError && (
+            <div
+              className="rounded-xl px-4 py-3 text-sm font-bold text-center"
+              style={{ background: 'rgba(255,60,60,0.12)', color: '#FF3C3C', border: '1.5px solid rgba(255,60,60,0.30)' }}
+            >
+              {joinError}
+            </div>
+          )}
 
           {/* Bouton principal */}
           <button
