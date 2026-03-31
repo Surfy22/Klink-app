@@ -161,6 +161,24 @@ h1, h2, h3 {
   opacity: 1;
 }
 
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes icon-bounce {
+  0%   { transform: rotate(0deg)   scale(1);    }
+  30%  { transform: rotate(12deg)  scale(1.25); }
+  60%  { transform: rotate(-4deg)  scale(0.94); }
+  80%  { transform: rotate(3deg)   scale(1.06); }
+  100% { transform: rotate(0deg)   scale(1);    }
+}
+
 /* ─── Twemoji ────────────────────────────────────────────────────────────── */
 img.twemoji {
   height:         1.15em;
