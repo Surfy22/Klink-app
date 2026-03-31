@@ -102,7 +102,7 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
       height:    '100%',
       boxSizing: 'border-box',
       animation: enterAnimClass
-        ? `${enterAnimClass} 320ms cubic-bezier(0.34, 1.3, 0.64, 1) ${enterDelay}ms both`
+        ? `${enterAnimClass} 200ms cubic-bezier(0.34, 1.3, 0.64, 1) ${enterDelay}ms both`
         : 'none',
     }}>
       {/* Bouton : tap bounce */}
@@ -227,9 +227,9 @@ export default function InvitePage({ user, target, onSend, onBack }) {
     transition: 'transform 250ms ease-in, opacity 250ms ease-in',
   } : {};
 
-  // Vague horizontale : 180ms délai global + 120ms entre les deux rangées
+  // Vague horizontale : 80ms délai global + 70ms entre les deux rangées
   const enterAnimClass = animPhase === 'enter' ? 'card-wave-in' : null;
-  function cardEnterDelay(i) { return 180 + Math.floor(i / 2) * 120; }
+  function cardEnterDelay(i) { return 80 + Math.floor(i / 2) * 70; }
 
   const items = displayMode === 'defi' ? QUICK_MESSAGES : PRESET_BETS;
 
@@ -387,21 +387,19 @@ export default function InvitePage({ user, target, onSend, onBack }) {
               <>
                 Envoyer l'invitation
                 <svg
-                  width="18" height="18" viewBox="0 0 18 18" fill="none"
+                  width="18" height="18" viewBox="0 0 24 24" fill="none"
                   style={{
                     marginLeft: 8,
                     flexShrink: 0,
                     filter: (message && !sending)
-                      ? 'drop-shadow(0 0 4px rgba(255,255,255,0.9)) drop-shadow(0 0 10px rgba(28,200,138,0.8)) drop-shadow(0 0 20px rgba(0,180,216,0.6))'
+                      ? 'drop-shadow(0 0 3px #fff) drop-shadow(0 0 8px #1CC88A) drop-shadow(0 0 18px #00B4D8) drop-shadow(0 0 35px rgba(0,180,216,0.4))'
                       : 'none',
                   }}
                 >
-                  {/* Corps arrondi */}
-                  <rect x="3" y="7" width="12" height="9" rx="3" stroke="white" strokeWidth="1.5" />
-                  {/* Broche gauche */}
-                  <rect x="6" y="2" width="2" height="6" rx="1" fill="white" />
-                  {/* Broche droite */}
-                  <rect x="10" y="2" width="2" height="6" rx="1" fill="white" />
+                  <rect x="3" y="3" width="18" height="18" rx="5" stroke="white" strokeWidth="1.5" />
+                  <circle cx="9" cy="10" r="1.5" fill="white" />
+                  <circle cx="15" cy="10" r="1.5" fill="white" />
+                  <path d="M9 14h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>
               </>
             )}
