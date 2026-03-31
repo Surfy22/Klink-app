@@ -82,13 +82,10 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
               onChange={(e) => setPseudo(e.target.value)}
               maxLength={30}
               autoFocus
-              placeholder="Nom de votre table..."
+              placeholder="Nom de votre table"
               className="glass-input w-full rounded-xl px-4 py-4 text-lg font-bold placeholder-gray-400"
               style={{ color: '#0A1628' }}
             />
-            <p className="text-xs mt-1.5" style={{ color: 'rgba(74,111,165,0.55)' }}>
-              30 caractères · visible par les autres tables
-            </p>
           </div>
 
           {joinError && (
