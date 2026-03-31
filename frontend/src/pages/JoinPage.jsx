@@ -76,19 +76,14 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
 
           <div>
-            <label
-              className="block text-sm font-black uppercase tracking-widest mb-2.5"
-              style={{ color: '#0A1628' }}
-            >
-              Nom de votre table
-            </label>
             <input
               type="text"
               value={pseudo}
               onChange={(e) => setPseudo(e.target.value)}
               maxLength={30}
               autoFocus
-              className="glass-input w-full rounded-xl px-4 py-4 text-lg font-bold"
+              placeholder="Nom de votre table..."
+              className="glass-input w-full rounded-xl px-4 py-4 text-lg font-bold placeholder-gray-400"
               style={{ color: '#0A1628' }}
             />
             <p className="text-xs mt-1.5" style={{ color: 'rgba(74,111,165,0.55)' }}>
