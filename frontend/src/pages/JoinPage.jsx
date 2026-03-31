@@ -14,7 +14,7 @@ const CameraIcon = ({ size, color }) => (
 );
 
 export default function JoinPage({ tableId, onJoin, joinError }) {
-  const [pseudo, setPseudo]         = useState(() => generateName());
+  const [pseudo, setPseudo]         = useState('');
   const [photo, setPhoto]           = useState(null);
   const [showCamera, setShowCamera] = useState(false);
 

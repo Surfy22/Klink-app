@@ -156,6 +156,11 @@ h1, h2, h3 {
   }
 }
 
+::placeholder {
+  color: #9CA3AF;
+  opacity: 1;
+}
+
 /* ─── Twemoji ────────────────────────────────────────────────────────────── */
 img.twemoji {
   height:         1.15em;
