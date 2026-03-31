@@ -15,60 +15,64 @@ const PRESET_BETS = [
   { emoji: '🎳', text: 'Je parie une bière que vous ratez votre prochain lancer !' },
 ];
 
-function SelectBtn({ emoji, text, selected, onClick }) {
+function Card({ emoji, text, selected, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="p-3.5 rounded-xl text-left text-sm transition-all"
+      className="text-left transition-transform duration-150 active:scale-[0.97]"
       style={{
-        background: selected ? 'rgba(0,255,135,0.10)' : 'rgba(10,22,40,0.06)',
-        border:     selected ? '1px solid rgba(0,255,135,0.55)' : '1px solid rgba(10,22,40,0.10)',
-        color:      selected ? '#00FF87' : '#0A1628',
+        background:   selected ? 'rgba(28,200,138,0.08)' : '#fff',
+        border:       selected ? '2px solid #1CC88A'     : '1.5px solid #E5E7EB',
+        borderRadius: 16,
+        padding:      16,
+        boxShadow:    '0 2px 8px rgba(0,0,0,0.06)',
+        transition:   'transform 0.15s ease, border 0.15s ease, background 0.15s ease',
       }}
     >
-      <span className="text-xl block mb-1">{emoji}</span>
-      <span className="leading-snug">{text}</span>
+      <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>{emoji}</span>
+      <span
+        style={{
+          fontSize:   13,
+          fontWeight: 500,
+          color:      selected ? '#1CC88A' : '#1a1a2e',
+          lineHeight: 1.4,
+        }}
+      >
+        {text}
+      </span>
     </button>
   );
 }
 
 export default function InvitePage({ user, target, onSend, onBack }) {
-  const [selectedQuick, setSelectedQuick] = useState(null);
-  const [betOpen, setBetOpen]             = useState(false);
-  const [selectedBet, setSelectedBet]     = useState(null);
-  const [customBet, setCustomBet]         = useState('');
-  const [sending, setSending]             = useState(false);
+  const [mode, setMode]             = useState('defi');
+  const [selectedDefi, setSelectedDefi] = useState(null);
+  const [selectedPari, setSelectedPari] = useState(null);
+  const [sending, setSending]       = useState(false);
 
   function getMessage() {
-    if (betOpen) {
-      if (selectedBet !== null) return `🍺 ${PRESET_BETS[selectedBet].text}`;
-      const custom = customBet.trim();
-      return custom ? `🍺 Je parie une bière que ${custom}` : null;
-    }
-    if (selectedQuick !== null) {
-      const q = QUICK_MESSAGES[selectedQuick];
+    if (mode === 'defi' && selectedDefi !== null) {
+      const q = QUICK_MESSAGES[selectedDefi];
       return `${q.emoji} ${q.text}`;
+    }
+    if (mode === 'pari' && selectedPari !== null) {
+      return `🍺 ${PRESET_BETS[selectedPari].text}`;
     }
     return null;
   }
 
   const message = getMessage();
 
-  function selectQuick(i) {
-    setBetOpen(false); setSelectedBet(null); setCustomBet('');
-    setSelectedQuick(selectedQuick === i ? null : i);
+  function switchMode(next) {
+    setMode(next);
   }
 
-  function toggleBet() {
-    const next = !betOpen;
-    setBetOpen(next);
-    setSelectedQuick(null);
-    if (!next) { setSelectedBet(null); setCustomBet(''); }
+  function toggleDefi(i) {
+    setSelectedDefi(selectedDefi === i ? null : i);
   }
 
-  function selectBet(i) {
-    setSelectedBet(selectedBet === i ? null : i);
-    setCustomBet('');
+  function togglePari(i) {
+    setSelectedPari(selectedPari === i ? null : i);
   }
 
   return (
@@ -93,7 +97,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 pb-10">
-        <div className="max-w-sm mx-auto space-y-6">
+        <div className="max-w-sm mx-auto space-y-5">
 
           {/* Table cible */}
           <div
@@ -112,90 +116,55 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             </div>
           </div>
 
-          {/* ─── Messages rapides ─── */}
-          <section>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#4A6FA5' }}>
-              Message rapide
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {QUICK_MESSAGES.map((msg, i) => (
-                <SelectBtn key={i} emoji={msg.emoji} text={msg.text} selected={selectedQuick === i} onClick={() => selectQuick(i)} />
-              ))}
-            </div>
-          </section>
+          {/* Toggle Défi / Pari bière */}
+          <div
+            className="flex p-1 gap-1"
+            style={{ background: '#1a1a2e', borderRadius: 12 }}
+          >
+            {[
+              { key: 'defi', label: 'Défi' },
+              { key: 'pari', label: 'Pari bière 🍺' },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => switchMode(key)}
+                className="flex-1 py-2 text-sm font-bold transition-all duration-150"
+                style={{
+                  borderRadius: 9,
+                  background:   mode === key ? '#1CC88A' : 'transparent',
+                  color:        mode === key ? '#fff'    : '#9CA3AF',
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
 
-          {/* ─── Pari bière ─── */}
-          <section>
-            <button
-              onClick={toggleBet}
-              className="w-full p-4 rounded-2xl text-left transition-all"
-              style={{
-                background: betOpen ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.80)',
-                border:     betOpen ? '1px solid rgba(255,215,0,0.40)' : '1px solid rgba(10,22,40,0.10)',
-              }}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">🍺</span>
-                  <span className="font-black text-sm" style={{ color: betOpen ? '#B8860B' : '#0A1628' }}>
-                    Pari bière
-                  </span>
-                </div>
-                <span className="text-sm" style={{ color: 'rgba(74,111,165,0.55)' }}>{betOpen ? '▲' : '▼'}</span>
-              </div>
-              <p className="text-xs mt-1" style={{ color: 'rgba(74,111,165,0.60)' }}>
-                "Je parie une bière que..."
-              </p>
-            </button>
-
-            {betOpen && (
-              <div className="mt-2 space-y-2 animate-fade-in">
-                <div className="grid grid-cols-2 gap-2">
-                  {PRESET_BETS.map((bet, i) => (
-                    <SelectBtn key={i} emoji={bet.emoji} text={bet.text} selected={selectedBet === i} onClick={() => selectBet(i)} />
-                  ))}
-                </div>
-
-                <div className="relative mt-1">
-                  <span className="absolute left-3.5 top-3.5 text-sm pointer-events-none select-none" style={{ color: 'rgba(74,111,165,0.45)' }}>
-                    ...
-                  </span>
-                  <input
-                    type="text"
-                    value={customBet}
-                    onChange={(e) => { setCustomBet(e.target.value); setSelectedBet(null); }}
-                    placeholder="tu finis ton verre le premier !"
-                    maxLength={80}
-                    className="w-full rounded-xl pl-10 pr-4 py-3 text-sm"
-                    style={{
-                      background: 'rgba(255,255,255,0.80)',
-                      border:     customBet ? '1px solid rgba(0,255,135,0.5)' : '1px solid rgba(10,22,40,0.10)',
-                      color:      '#0A1628',
-                      outline:    'none',
-                    }}
+          {/* Grille 2×2 */}
+          <div className="grid grid-cols-2 gap-3">
+            {mode === 'defi'
+              ? QUICK_MESSAGES.map((msg, i) => (
+                  <Card
+                    key={i}
+                    emoji={msg.emoji}
+                    text={msg.text}
+                    selected={selectedDefi === i}
+                    onClick={() => toggleDefi(i)}
                   />
-                </div>
-              </div>
-            )}
-          </section>
+                ))
+              : PRESET_BETS.map((bet, i) => (
+                  <Card
+                    key={i}
+                    emoji={bet.emoji}
+                    text={bet.text}
+                    selected={selectedPari === i}
+                    onClick={() => togglePari(i)}
+                  />
+                ))
+            }
+          </div>
 
-          {/* ─── Aperçu ─── */}
-          {message && (
-            <div
-              className="rounded-2xl px-4 py-4 animate-fade-in"
-              style={{
-                background: 'rgba(240,244,255,0.85)',
-                border:     '1px solid rgba(0,212,255,0.18)',
-              }}
-            >
-              <p className="text-xs mb-1.5 uppercase tracking-widest font-semibold" style={{ color: '#4A6FA5' }}>
-                Aperçu
-              </p>
-              <p className="text-base leading-relaxed" style={{ color: '#0A1628' }}>{message}</p>
-            </div>
-          )}
-
-          {/* ─── Envoyer ─── */}
+          {/* Bouton CTA */}
           <button
             onClick={() => {
               if (!message || sending) return;
@@ -205,12 +174,15 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             disabled={!message || sending}
             className="w-full py-4 rounded-2xl font-black text-lg"
             style={(message && !sending) ? {
-              background: 'linear-gradient(135deg, #00FF87, #0099FF)',
+              background: 'linear-gradient(135deg, #00FF87, #00D4FF)',
               color:      '#000',
-              boxShadow:  '0 4px 24px rgba(0,255,135,0.3)',
+              fontWeight: 900,
+              boxShadow:  '0 4px 32px rgba(0,255,135,0.40), 0 2px 12px rgba(0,212,255,0.25)',
+              transition: 'all 0.15s',
             } : {
               background: 'rgba(10,22,40,0.07)',
-              color:      'rgba(10,22,40,0.30)',
+              color:      'rgba(10,22,40,0.28)',
+              fontWeight: 700,
               cursor:     'not-allowed',
             }}
           >
