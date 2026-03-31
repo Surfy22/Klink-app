@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { generateName } from '../utils/nameGenerator';
-import { getInitials } from '../utils/avatarColor';
 import CameraCapture from '../components/CameraCapture';
 import KlinkLogo from '../components/KlinkLogo';
 
@@ -25,17 +24,15 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
     onJoin(pseudo.trim(), photo);
   }
 
-  const hasPseudo = pseudo.trim().length > 0;
-
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6"
       style={{ background: '#F0F4FF' }}
     >
-      <div className="w-full max-w-sm">
+      <div className="w-full max-w-sm flex flex-col items-center gap-6">
 
         {/* Logo KLINK */}
-        <div className="text-center mb-5">
+        <div className="text-center">
           <div className="flex justify-center mb-4 animate-float">
             <KlinkLogo size={80} />
           </div>
@@ -49,59 +46,35 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
 
         {/* Tag TABLE X */}
         <p
-          className="text-sm font-semibold tracking-widest uppercase text-center mb-5"
-          style={{ color: '#00FF87' }}
+          className="text-sm font-semibold tracking-widest uppercase"
+          style={{ color: '#00FF87', marginTop: -8 }}
         >
           Table <span className="font-black">{tableId}</span>
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Avatar 52px — icône caméra uniquement sur cette page */}
+        <button
+          type="button"
+          onClick={() => setShowCamera(true)}
+          className="relative rounded-full flex items-center justify-center overflow-hidden"
+          style={{
+            width: 52, height: 52,
+            border: '2.5px solid #1CC88A',
+            background: '#2A2A3D',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          {photo ? (
+            <img src={photo} alt="avatar" className="w-full h-full object-cover rounded-full" />
+          ) : (
+            <CameraIcon size={20} color="#1CC88A" />
+          )}
+        </button>
 
-          {/* Avatar 52px */}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowCamera(true)}
-              className="relative rounded-full flex items-center justify-center overflow-hidden"
-              style={{
-                width: 52, height: 52,
-                border: '2.5px solid #1CC88A',
-                background: '#2A2A3D',
-                flexShrink: 0,
-                cursor: 'pointer',
-              }}
-            >
-              {photo ? (
-                /* Photo prise : affiche la photo, pas d'overlay */
-                <img
-                  src={photo}
-                  alt="avatar"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : hasPseudo ? (
-                /* Pseudo en cours : initiales + overlay caméra à faible opacité */
-                <>
-                  <span
-                    className="font-black text-white select-none"
-                    style={{ fontSize: 17 }}
-                  >
-                    {getInitials(pseudo)}
-                  </span>
-                  <div
-                    className="absolute inset-0 rounded-full flex items-center justify-center"
-                    style={{ background: 'rgba(0,0,0,0.35)', opacity: 0.5 }}
-                  >
-                    <CameraIcon size={16} color="white" />
-                  </div>
-                </>
-              ) : (
-                /* État vide : uniquement l'icône caméra verte */
-                <CameraIcon size={20} color="#1CC88A" />
-              )}
-            </button>
-          </div>
+        {/* Champ pseudo + CTA */}
+        <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
 
-          {/* Champ pseudo */}
           <div>
             <label
               className="block text-sm font-black uppercase tracking-widest mb-2.5"
@@ -109,40 +82,20 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
             >
               Nom de votre table
             </label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="text"
-                value={pseudo}
-                onChange={(e) => setPseudo(e.target.value)}
-                maxLength={30}
-                autoFocus
-                placeholder="Ex: Les Loups, Table des Champions..."
-                className="glass-input flex-1 rounded-xl px-4 py-4 text-lg font-bold"
-                style={{ color: '#0A1628' }}
-              />
-              {/* Bouton éclair */}
-              <button
-                type="button"
-                onClick={() => setPseudo(generateName())}
-                title="Générer un nom de table"
-                className="flex items-center justify-center flex-shrink-0"
-                style={{
-                  width: 22, height: 22,
-                  background: '#1CC88A',
-                  borderRadius: 8,
-                }}
-              >
-                <svg width="10" height="14" viewBox="0 0 10 14">
-                  <polygon points="6,0 0,8 5,8 4,14 10,6 5,6" fill="white" />
-                </svg>
-              </button>
-            </div>
+            <input
+              type="text"
+              value={pseudo}
+              onChange={(e) => setPseudo(e.target.value)}
+              maxLength={30}
+              autoFocus
+              className="glass-input w-full rounded-xl px-4 py-4 text-lg font-bold"
+              style={{ color: '#0A1628' }}
+            />
             <p className="text-xs mt-1.5" style={{ color: 'rgba(74,111,165,0.55)' }}>
               30 caractères · visible par les autres tables
             </p>
           </div>
 
-          {/* Erreur nom déjà pris */}
           {joinError && (
             <div
               className="rounded-xl px-4 py-3 text-sm font-bold text-center"
@@ -156,7 +109,6 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
             </div>
           )}
 
-          {/* Bouton CTA */}
           <button
             type="submit"
             disabled={!pseudo.trim()}
@@ -174,7 +126,7 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
               cursor:     'not-allowed',
             }}
           >
-            Entrer dans le bar 🚪
+            Entrer dans le bar 🎟️
           </button>
         </form>
       </div>
