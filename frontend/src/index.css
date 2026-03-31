@@ -213,10 +213,10 @@ h1, h2, h3 {
   position: absolute;
   top: 0;
   left: -65%;
-  width: 50%;
+  width: 60%;
   height: 100%;
-  background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.50) 50%, transparent 75%);
-  animation: shimmer-sweep 420ms ease forwards;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,0.60), transparent);
+  animation: shimmer-sweep 500ms ease forwards;
   pointer-events: none;
 }
 

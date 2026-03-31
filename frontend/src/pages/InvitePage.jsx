@@ -23,7 +23,7 @@ const ICONS = {
   '🎯': {
     bg: 'rgba(239,68,68,0.10)',
     svg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="1.8" strokeLinecap="round">
         <circle cx="12" cy="12" r="10" />
         <circle cx="12" cy="12" r="6" />
         <circle cx="12" cy="12" r="2" />
@@ -33,7 +33,7 @@ const ICONS = {
   '🎱': {
     bg: 'rgba(30,30,30,0.08)',
     svg: (
-      <svg width="24" height="24" viewBox="0 0 24 24">
+      <svg width="32" height="32" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" fill="#1a1a2e" />
         <circle cx="12" cy="10.5" r="5" fill="white" />
         <text x="12" y="14.5" textAnchor="middle" fontSize="7.5" fontWeight="900" fill="#1a1a2e" fontFamily="system-ui,sans-serif">8</text>
@@ -43,7 +43,7 @@ const ICONS = {
   '🍺': {
     bg: 'rgba(251,191,36,0.10)',
     svg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
         <path d="M6 4h9L13.5 18H7.5L6 4z" fill="#F59E0B" />
         <path d="M15 7.5h3a1.5 1.5 0 010 3h-3" stroke="#F59E0B" strokeWidth="1.8" strokeLinecap="round" />
         <rect x="8" y="8" width="5" height="4" rx="1" fill="rgba(255,255,255,0.30)" />
@@ -54,7 +54,7 @@ const ICONS = {
   '💬': {
     bg: 'rgba(99,102,241,0.10)',
     svg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="#6366F1">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="#6366F1">
         <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
       </svg>
     ),
@@ -62,7 +62,7 @@ const ICONS = {
   '🎳': {
     bg: 'rgba(168,85,247,0.10)',
     svg: (
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="#A855F7">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="#A855F7">
         <circle cx="12" cy="5" r="3" />
         <path d="M9 8.5c-.6 1.1-1.2 2.7-1.2 4.8 0 2.1.5 3.2 4.2 3.2s4.2-1.1 4.2-3.2c0-2.1-.6-3.7-1.2-4.8H9z" />
         <ellipse cx="12" cy="20.5" rx="4.2" ry="2" />
@@ -99,6 +99,8 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
   return (
     // Wrapper d'entrée : translateX + scaleY sans conflit avec les autres transforms
     <div style={{
+      height:    '100%',
+      boxSizing: 'border-box',
       animation: enterAnimClass
         ? `${enterAnimClass} 300ms ease-out ${enterDelay}ms both`
         : 'none',
@@ -111,6 +113,8 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
           position:     'relative',
           overflow:     'hidden',
           width:        '100%',
+          height:       '100%',
+          boxSizing:    'border-box',
           textAlign:    'left',
           cursor:       'pointer',
           background:   selected
@@ -167,6 +171,8 @@ export default function InvitePage({ user, target, onSend, onBack }) {
   const [selectedDefi, setSelectedDefi] = useState(null);
   const [selectedPari, setSelectedPari] = useState(null);
   const [sending,      setSending]      = useState(false);
+  const [gridScale,    setGridScale]    = useState(1);
+  const [scaleTiming,  setScaleTiming]  = useState('none');
   const lockRef = useRef(false);
 
   function getMessage() {
@@ -190,6 +196,14 @@ export default function InvitePage({ user, target, onSend, onBack }) {
     lockRef.current = true;
 
     const goingRight = next === 'pari';
+    // Effet scale squeeze → regrossissement spring
+    setScaleTiming('150ms ease-in');
+    setGridScale(0.94);
+    setTimeout(() => {
+      setScaleTiming('300ms cubic-bezier(0.34, 1.56, 0.64, 1)');
+      setGridScale(1);
+    }, 150);
+
     setToggleMode(next);                // indicateur glisse immédiatement
     setExitDir(goingRight ? -1 : 1);   // cartes actuelles sortent vers la gauche si on va à droite
     setEnterFromRight(goingRight);      // nouvelles cartes entrent depuis la droite
@@ -313,10 +327,19 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             ))}
           </div>
 
-          {/* ── Grille 2×2 avec animation d'exit ── */}
+          {/* ── Grille 2×2 avec animation d'exit + scale squeeze ── */}
+          <div style={{
+            transform:  `scale(${gridScale})`,
+            transition: `transform ${scaleTiming}`,
+          }}>
           <div
-            className="grid grid-cols-2 gap-3"
-            style={gridExitStyle}
+            style={{
+              display:             'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gridAutoRows:        '1fr',
+              gap:                 12,
+              ...gridExitStyle,
+            }}
           >
             {items.map((item, i) => (
               <Card
@@ -335,6 +358,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
                 enterDelay={i * 60}
               />
             ))}
+          </div>
           </div>
 
           {/* ── Bouton CTA ── */}
@@ -361,10 +385,10 @@ export default function InvitePage({ user, target, onSend, onBack }) {
           >
             {sending ? 'Envoi…' : (
               <>
-                Envoyer l'invitation
-                <svg width="14" height="14" viewBox="0 0 10 14" style={{ marginLeft: 8, flexShrink: 0 }}>
-                  <polygon points="6,0 0,8 5,8 4,14 10,6 5,6" fill={message ? 'white' : 'rgba(10,22,40,0.28)'} />
-                </svg>
+                Envoyer l'invitation{' '}
+                <span style={message && !sending ? {
+                  textShadow: '0 0 8px rgba(28,200,138,0.9), 0 0 16px rgba(0,180,216,0.6)',
+                } : {}}>🔌</span>
               </>
             )}
           </button>
