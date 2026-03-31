@@ -6,7 +6,7 @@ import { useEffect } from 'react';
  */
 export default function AnnouncementOverlay({ message, onDismiss }) {
   useEffect(() => {
-    const timer = setTimeout(onDismiss, 15000);
+    const timer = setTimeout(onDismiss, 8000);
     return () => clearTimeout(timer);
   }, [onDismiss]);
 
@@ -126,7 +126,7 @@ export default function AnnouncementOverlay({ message, onDismiss }) {
           <div style={{
             height:     '100%',
             background: 'rgba(255,255,255,0.85)',
-            animation:  'shrink-bar 15s linear forwards',
+            animation:  'shrink-bar 8s linear forwards',
             width:      '100%',
           }} />
         </div>

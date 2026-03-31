@@ -10,6 +10,22 @@ import CelebrationPopup from './components/CelebrationPopup';
 import BetResultModal from './components/BetResultModal';
 import ContactAlert from './components/ContactAlert';
 
+/** Retourne l'UUID persistant de cette table (localStorage), le crée si absent. */
+function getOrCreateTableUUID(barId, tableId) {
+  const key = `klink_table_id_${barId}_${tableId}`;
+  let uuid = localStorage.getItem(key);
+  if (!uuid) {
+    uuid = typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 15);
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    localStorage.setItem(key, uuid);
+  }
+  return uuid;
+}
+
 export default function App() {
   const { barId, tableId } = useParams();
 
@@ -95,10 +111,11 @@ export default function App() {
       setConnected(true);
       if (hasJoined.current && userRef.current) {
         socket.emit('join', {
-          barId:   barIdRef.current,
-          tableId: tableIdRef.current,
-          pseudo:  userRef.current.pseudo,
-          photo:   userRef.current.photo,
+          barId:     barIdRef.current,
+          tableId:   tableIdRef.current,
+          tableUUID: getOrCreateTableUUID(barIdRef.current, tableIdRef.current),
+          pseudo:    userRef.current.pseudo,
+          photo:     userRef.current.photo,
         });
       }
     };
@@ -152,6 +169,8 @@ export default function App() {
     // inutiles et pouvait perturber l'état des tables côté serveur).
     hasJoined.current = true;
 
+    // Génère / récupère l'UUID stable de cette table dès le premier join
+    getOrCreateTableUUID(barId, tableId);
     setUser({ pseudo, photo, tableId, barId });
     socket.connect();   // → déclenche onConnect() → émet 'join'
     setScreen('tables');

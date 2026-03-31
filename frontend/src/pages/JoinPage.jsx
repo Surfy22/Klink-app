@@ -31,12 +31,6 @@ export default function JoinPage({ tableId, onJoin }) {
           >
             KLINK
           </h1>
-          <p
-            className="text-xs font-bold tracking-[0.22em] uppercase mt-1.5"
-            style={{ color: 'rgba(0,212,255,0.55)' }}
-          >
-            Connect. Fast. Now.
-          </p>
           <p className="text-sm font-semibold tracking-widest uppercase mt-3"
              style={{ color: '#00FF87' }}>
             Table <span className="font-black">{tableId}</span>
@@ -49,10 +43,10 @@ export default function JoinPage({ tableId, onJoin }) {
           <div className="flex flex-col items-center gap-3">
             <div
               className="relative p-[3px] rounded-full"
-              style={{ background: 'linear-gradient(135deg, #00FF87, #00D4FF)', boxShadow: '0 0 20px rgba(0,255,135,0.35), 0 0 40px rgba(0,212,255,0.18)' }}
+              style={{ background: 'linear-gradient(135deg, #00FF87, #00D4FF)', boxShadow: '0 0 16px rgba(0,255,135,0.30), 0 0 32px rgba(0,212,255,0.14)' }}
             >
               <div className="rounded-full p-[2px]" style={{ background: '#F0F4FF' }}>
-                <Avatar pseudo={pseudo} photo={photo} size={96} />
+                <Avatar pseudo={pseudo} photo={photo} size={76} />
               </div>
             </div>
 
@@ -79,7 +73,7 @@ export default function JoinPage({ tableId, onJoin }) {
 
           {/* Nom de table */}
           <div>
-            <label className="block text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4A6FA5' }}>
+            <label className="block text-sm font-black uppercase tracking-widest mb-2.5" style={{ color: '#0A1628' }}>
               Nom de votre table
             </label>
             <div className="flex gap-2">
@@ -90,7 +84,8 @@ export default function JoinPage({ tableId, onJoin }) {
                 maxLength={30}
                 autoFocus
                 placeholder="Ex: Les Loups, Table des Champions..."
-                className="glass-input flex-1 rounded-xl px-4 py-3 text-base"
+                className="glass-input flex-1 rounded-xl px-4 py-4 text-lg font-bold"
+                style={{ color: '#0A1628' }}
               />
               <button
                 type="button"

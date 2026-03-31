@@ -56,6 +56,7 @@ export default function TablesPage({
   senderNotif,
 }) {
   const [showQR, setShowQR] = useState(false);
+  // scores = { [uuid]: { wins, pseudo, photo, tableId, connected } }
   const topScores = Object.entries(scores)
     .sort(([, a], [, b]) => b.wins - a.wins)
     .slice(0, 5);
@@ -226,9 +227,9 @@ export default function TablesPage({
           }} />
 
           <div className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 scrollbar-none">
-            {topScores.map(([pseudo, { wins, photo }], i) => (
+            {topScores.map(([uuid, { wins, pseudo, photo, connected }], i) => (
               <div
-                key={pseudo}
+                key={uuid}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl"
                 style={{
                   background: cardBg(i),
@@ -237,15 +238,17 @@ export default function TablesPage({
                   boxShadow:  i === 0 ? '0 0 12px rgba(255,215,0,0.18)' :
                               i === 1 ? '0 0 10px rgba(0,212,255,0.15)' :
                               i === 2 ? '0 0 10px rgba(0,255,135,0.12)' : 'none',
+                  opacity:    connected === false ? 0.42 : 1,
+                  transition: 'opacity 0.4s',
                 }}
               >
                 <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
-                <Avatar pseudo={pseudo} photo={photo ?? null} size={36} />
+                <Avatar pseudo={pseudo ?? uuid} photo={photo ?? null} size={36} />
                 <span
                   className="text-xs font-bold truncate max-w-[64px] text-center"
-                  style={{ color: pseudoColor(i) }}
+                  style={{ color: connected === false ? 'rgba(74,111,165,0.50)' : pseudoColor(i) }}
                 >
-                  {pseudo}
+                  {pseudo ?? uuid}
                 </span>
                 <LightningScore wins={wins} />
               </div>

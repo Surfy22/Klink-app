@@ -263,6 +263,16 @@ scheduleMidnightReset();
 module.exports = (io) => {
   _io = io;
 
+  // Heartbeat toutes les 10 s — force une sync complète de toutes les tables et scores
+  setInterval(() => {
+    for (const [barId, bar] of Object.entries(bars)) {
+      if (Object.keys(bar.tables).length > 0) {
+        io.to(barId).emit('tables:updated', getActiveTables(barId));
+        io.to(barId).emit('scores:updated', bar.scores);
+      }
+    }
+  }, 10000);
+
   io.on('connection', (socket) => {
     console.log(`[KLINK] ✅ Connexion : ${socket.id} depuis ${socket.handshake.address}`);
     let currentBarId   = null;
@@ -273,13 +283,16 @@ module.exports = (io) => {
 
     socket.on('join', (payload) => {
       try {
-        const { barId, tableId, pseudo, photo } = payload ?? {};
+        const { barId, tableId, pseudo, photo, tableUUID } = payload ?? {};
 
         // Validation
         if (!isStr(barId, 50))    return;
         if (!isStr(tableId, 50))  return;
         if (!isStr(pseudo, 30))   return;
         if (!isValidPhoto(photo)) return;
+
+        // UUID unique par table (persisté côté client dans localStorage)
+        const validUUID = isStr(tableUUID, 36) ? tableUUID.trim() : tableId;
 
         // Rate limit : 5 joins par 10 s (reconnexions légitimes comprises)
         if (isRateLimited(socket.id, 'join', 5, 10_000)) return;
@@ -302,19 +315,29 @@ module.exports = (io) => {
         }
 
         bar.tables[tableId] = {
-          socketId: socket.id,
-          pseudo:   pseudo.trim(),
-          photo:    photo || null,
+          socketId:  socket.id,
+          pseudo:    pseudo.trim(),
+          photo:     photo || null,
           tableId,
-          status:   prevEntry?.status ?? null,   // conserve le statut après reconnexion
-          joinedAt: new Date().toISOString(),
+          tableUUID: validUUID,
+          status:    prevEntry?.status ?? null,   // conserve le statut après reconnexion
+          joinedAt:  new Date().toISOString(),
         };
 
-        console.log(`[KLINK] 📋 join — bar="${barId}" table="${tableId}" pseudo="${pseudo.trim()}" socket=${socket.id}`);
+        // Reconnexion : restaure le score (marque connected:true, met à jour pseudo/photo)
+        if (bar.scores[validUUID]) {
+          bar.scores[validUUID].connected = true;
+          bar.scores[validUUID].pseudo    = pseudo.trim();
+          if (photo) bar.scores[validUUID].photo = photo;
+        }
+
+        console.log(`[KLINK] 📋 join — bar="${barId}" table="${tableId}" uuid="${validUUID}" pseudo="${pseudo.trim()}" socket=${socket.id}`);
         console.log(`[KLINK] 🏠 room "${barId}" contient maintenant ${Object.keys(bar.tables).length} table(s) : ${Object.keys(bar.tables).join(', ')}`);
 
+        // Diffuse la liste complète à TOUTES les tables (remplace complètement côté client)
         io.to(barId).emit('tables:updated', getActiveTables(barId));
-        socket.emit('scores:updated', bar.scores);
+        // Scores mis à jour pour tout le monde (connected:true restauré)
+        io.to(barId).emit('scores:updated', bar.scores);
 
         // Si une invitation était en attente lors de la déconnexion, la re-livrer
         const reconnectQueue = bar.inviteQueues[tableId];
@@ -540,18 +563,23 @@ module.exports = (io) => {
 
         if (firstVote.winnerTableId === winnerTableId) {
           // ── Accord — résolution normale ──────────────────────────────────────
-          if (!bar.scores[winnerPseudo]) {
-            bar.scores[winnerPseudo] = { wins: 0, tableId: winnerTableId };
+          const winnerTable = bar.tables[winnerTableId];
+          const uuid = winnerTable?.tableUUID || winnerTableId;
+
+          if (!bar.scores[uuid]) {
+            bar.scores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: null, connected: true };
           }
-          bar.scores[winnerPseudo].wins++;
-          bar.scores[winnerPseudo].tableId = winnerTableId;
+          bar.scores[uuid].wins++;
+          bar.scores[uuid].pseudo    = winnerPseudo;
+          bar.scores[uuid].tableId   = winnerTableId;
+          bar.scores[uuid].connected = true;
 
           // Priorité : photo stockée côté serveur au moment du join (plus fiable).
-          const storedPhoto  = bar.tables[winnerTableId]?.photo ?? null;
+          const storedPhoto  = winnerTable?.photo ?? null;
           const photoToStore = storedPhoto !== null ? storedPhoto
             : (isValidPhoto(winnerPhoto) && winnerPhoto != null ? winnerPhoto : null);
-          bar.scores[winnerPseudo].photo = photoToStore;
-          console.log(`[${barId}] Photo classement "${winnerPseudo}" : ${photoToStore ? 'présente' : 'absente'} (source=${storedPhoto !== null ? 'serveur' : 'client'})`);
+          bar.scores[uuid].photo = photoToStore;
+          console.log(`[${barId}] Photo classement "${winnerPseudo}" (uuid=${uuid}) : ${photoToStore ? 'présente' : 'absente'} (source=${storedPhoto !== null ? 'serveur' : 'client'})`);
 
           // Libérer le statut "En jeu" des deux tables
           const t1accord = firstVote.voterTableId;
@@ -785,8 +813,14 @@ module.exports = (io) => {
                   }
                   delete bar.inviteQueues[currentTableId];
                 }
+                // Marquer la table comme déconnectée dans le classement (reste visible en grisé)
+                const removedUUID = cur.tableUUID || currentTableId;
+                if (bar.scores[removedUUID]) {
+                  bar.scores[removedUUID].connected = false;
+                }
                 delete bar.tables[currentTableId];
                 io.to(currentBarId).emit('tables:updated', getActiveTables(currentBarId));
+                io.to(currentBarId).emit('scores:updated', bar.scores);
                 notifyAdmins(io, currentBarId);
                 console.log(`[${currentBarId}] Table ${currentTableId} retirée après délai de grâce (socket=${socket.id})`);
                 maybeCleanBar(currentBarId);
