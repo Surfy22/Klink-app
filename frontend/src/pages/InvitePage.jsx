@@ -227,9 +227,9 @@ export default function InvitePage({ user, target, onSend, onBack }) {
     transition: 'transform 250ms ease-in, opacity 250ms ease-in',
   } : {};
 
-  // Vague horizontale : 80ms délai global + 70ms entre les deux rangées
+  // 4 cartes simultanées, délai global 80ms
   const enterAnimClass = animPhase === 'enter' ? 'card-wave-in' : null;
-  function cardEnterDelay(i) { return 80 + Math.floor(i / 2) * 70; }
+  function cardEnterDelay() { return 80; }
 
   const items = displayMode === 'defi' ? QUICK_MESSAGES : PRESET_BETS;
 
@@ -385,22 +385,12 @@ export default function InvitePage({ user, target, onSend, onBack }) {
           >
             {sending ? 'Envoi…' : (
               <>
-                Envoyer l'invitation
-                <svg
-                  width="18" height="18" viewBox="0 0 24 24" fill="none"
-                  style={{
-                    marginLeft: 8,
-                    flexShrink: 0,
-                    filter: (message && !sending)
-                      ? 'drop-shadow(0 0 3px #fff) drop-shadow(0 0 8px #1CC88A) drop-shadow(0 0 18px #00B4D8) drop-shadow(0 0 35px rgba(0,180,216,0.4))'
-                      : 'none',
-                  }}
-                >
-                  <rect x="3" y="3" width="18" height="18" rx="5" stroke="white" strokeWidth="1.5" />
-                  <circle cx="9" cy="10" r="1.5" fill="white" />
-                  <circle cx="15" cy="10" r="1.5" fill="white" />
-                  <path d="M9 14h6" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
+                Envoyer l'invitation{' '}
+                <span style={(message && !sending) ? {
+                  display:  'inline-block',
+                  fontSize: 18,
+                  filter:   'drop-shadow(0 0 6px rgba(28,200,138,1)) drop-shadow(0 0 12px rgba(0,180,216,0.9)) drop-shadow(0 0 25px rgba(0,180,216,0.6))',
+                } : { display: 'inline-block', fontSize: 18 }}>🔌</span>
               </>
             )}
           </button>
