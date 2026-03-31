@@ -104,7 +104,7 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
           <button
             type="submit"
             disabled={!pseudo.trim()}
-            className="w-full py-4 rounded-2xl text-lg"
+            className="w-full py-4 rounded-2xl text-lg flex items-center justify-center gap-2"
             style={pseudo.trim() ? {
               background: 'linear-gradient(135deg, #00FF87, #00D4FF)',
               color:      '#000',
@@ -118,7 +118,12 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
               cursor:     'not-allowed',
             }}
           >
-            Entrer dans le bar 🎟️
+            Entrer dans le bar{' '}
+            <span style={pseudo.trim() ? {
+              display: 'inline-block',
+              fontSize: 18,
+              filter: 'drop-shadow(0 0 6px rgba(28,200,138,1)) drop-shadow(0 0 12px rgba(0,180,216,0.9)) drop-shadow(0 0 25px rgba(0,180,216,0.6))',
+            } : { display: 'inline-block', fontSize: 18 }}>🔌</span>
           </button>
         </form>
       </div>
