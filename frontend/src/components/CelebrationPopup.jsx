@@ -123,10 +123,12 @@ export default function CelebrationPopup({ celebration, onClose }) {
         boxShadow:    '0 0 28px rgba(0,255,135,0.28), 0 0 56px rgba(0,212,255,0.16), 0 20px 40px rgba(0,0,0,0.30)',
         width:        '100%',
         maxWidth:     '24rem',
+        height:       'fit-content',
       }}>
       <div
         className="relative overflow-hidden w-full animate-bounce-in flex flex-col"
         style={{
+          height:              'fit-content',
           background:          'rgba(255,255,255,0.88)',
           borderRadius:        24,
           backdropFilter:      'blur(24px)',
