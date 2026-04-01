@@ -221,18 +221,6 @@ export default function InvitePage({ user, target, onSend, onBack }) {
     }, 250);
   }
 
-  // Style du conteneur de cartes pendant la phase exit
-  const gridExitStyle = animPhase === 'exit' ? {
-    transform:  `translateX(${exitDir * 30}px) scaleY(0.96)`,
-    opacity:    0,
-    transition: 'transform 250ms ease-in, opacity 250ms ease-in',
-  } : {};
-
-  // 4 cartes simultanées, délai global 80ms
-  const enterAnimClass = animPhase === 'enter' ? 'card-wave-in' : null;
-  function cardEnterDelay() { return 80; }
-
-  const items = displayMode === 'defi' ? QUICK_MESSAGES : PRESET_BETS;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
@@ -328,38 +316,59 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             ))}
           </div>
 
-          {/* ── Grille 2×2 avec animation d'exit + scale squeeze ── */}
+          {/* ── Deux grilles superposées — hauteur figée ── */}
           <div style={{
             transform:  `scale(${gridScale})`,
             transition: `transform ${scaleTiming}`,
           }}>
-          <div
-            style={{
-              display:             'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gridAutoRows:        '1fr',
-              gap:                 12,
-              ...gridExitStyle,
-            }}
-          >
-            {items.map((item, i) => (
-              <Card
-                key={`${displayMode}-${i}`}
-                emojiKey={item.emoji}
-                text={item.text}
-                selected={displayMode === 'defi' ? selectedDefi === i : selectedPari === i}
-                onClick={() => {
-                  if (displayMode === 'defi') {
-                    setSelectedDefi(selectedDefi === i ? null : i);
-                  } else {
-                    setSelectedPari(selectedPari === i ? null : i);
-                  }
-                }}
-                enterAnimClass={enterAnimClass}
-                enterDelay={cardEnterDelay(i)}
-              />
-            ))}
-          </div>
+            <div style={{ position: 'relative', height: 272 }}>
+              {[
+                { key: 'defi', items: QUICK_MESSAGES },
+                { key: 'pari', items: PRESET_BETS    },
+              ].map(({ key, items: gridItems }) => {
+                const isActive  = displayMode === key;
+                const isExiting = animPhase === 'exit'  && isActive;
+                const isEntering= animPhase === 'enter' && isActive;
+                return (
+                  <div
+                    key={key}
+                    style={{
+                      position:            'absolute',
+                      top:                 0,
+                      left:                0,
+                      width:               '100%',
+                      height:              '100%',
+                      display:             'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gridAutoRows:        '1fr',
+                      gap:                 12,
+                      opacity:             isExiting ? 0 : (isActive ? 1 : 0),
+                      transform:           isExiting ? `translateX(${exitDir * 30}px) scaleY(0.96)` : 'none',
+                      transition:          isExiting ? 'transform 250ms ease-in, opacity 250ms ease-in' : 'none',
+                      pointerEvents:       isActive ? 'auto' : 'none',
+                    }}
+                  >
+                    {gridItems.map((item, i) => (
+                      <Card
+                        key={`${key}-${i}`}
+                        emojiKey={item.emoji}
+                        text={item.text}
+                        selected={key === 'defi' ? selectedDefi === i : selectedPari === i}
+                        onClick={() => {
+                          if (key === 'defi') {
+                            setSelectedDefi(selectedDefi === i ? null : i);
+                          } else {
+                            setSelectedPari(selectedPari === i ? null : i);
+                          }
+                        }}
+                        enterAnimClass={isEntering ? 'card-wave-in' : null}
+                        enterDelay={80}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Bouton CTA ── */}
