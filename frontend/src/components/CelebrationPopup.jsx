@@ -127,8 +127,6 @@ export default function CelebrationPopup({ celebration, onClose }) {
       <div
         className="relative overflow-hidden w-full animate-bounce-in flex flex-col"
         style={{
-          height:              '80vh',
-          maxHeight:           580,
           background:          'rgba(255,255,255,0.88)',
           borderRadius:        24,
           backdropFilter:      'blur(24px)',
@@ -145,7 +143,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           }}
         />
 
-        <div className="flex flex-col flex-1 overflow-hidden" style={{ padding: '12px 16px', gap: 8 }}>
+        <div className="flex flex-col" style={{ padding: '12px 16px', gap: 8 }}>
           {/* Titre */}
           <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
@@ -155,7 +153,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                   ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
                   : <>C'est parti&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
             </p>
-            <p className="text-sm" style={{ color: '#4A6FA5', marginTop: 4 }}>{subtitle}</p>
+            <p className="text-sm" style={{ color: '#4A6FA5', marginTop: 2 }}>{subtitle}</p>
           </div>
 
           {/* Deux avatars */}
@@ -200,7 +198,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                 letterSpacing: '0.1em',
                 color:         '#9CA3AF',
                 textTransform: 'uppercase',
-                marginBottom:  10,
+                marginBottom:  6,
               }}>
                 {isTie ? 'Résultat' : (isBet ? 'Le pari' : 'Le message')}
               </p>
