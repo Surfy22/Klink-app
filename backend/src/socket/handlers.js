@@ -558,6 +558,13 @@ module.exports = (io) => {
           // Premier vote — on attend le deuxième
           bar.pendingVotes[betId] = { voterTableId: currentTableId, winnerTableId, winnerPseudo, winnerPhoto };
           console.log(`[${barId}] Pari ${betId} — premier vote de table "${currentTableId}" pour "${winnerPseudo}"`);
+          // Timeout 5 min : supprime un vote orphelin si le 2e vote n'arrive jamais
+          setTimeout(() => {
+            if (bars[barId]?.pendingVotes?.[betId]) {
+              console.log(`[${barId}] Pari ${betId} — vote orphelin supprimé après timeout`);
+              delete bars[barId].pendingVotes[betId];
+            }
+          }, 5 * 60 * 1000);
           return;
         }
 
@@ -817,12 +824,21 @@ module.exports = (io) => {
                 // Annuler la file d'invitations en attente pour cette table
                 const pendingQueue = bar.inviteQueues[currentTableId];
                 if (pendingQueue) {
-                  for (const inv of pendingQueue) {
+                  pendingQueue.forEach((inv, idx) => {
                     const waitingSender = bar.tables[inv.fromTableId];
                     if (waitingSender) {
-                      io.to(waitingSender.socketId).emit('invite:busy', { targetPseudo: cur.pseudo });
+                      if (idx === 0) {
+                        // Invite active (déjà affichée) → feedback refus clair pour l'expéditeur
+                        io.to(waitingSender.socketId).emit('invite:response', {
+                          responderPseudo: cur.pseudo,
+                          accepted: false,
+                        });
+                      } else {
+                        // Invites en file d'attente → notifier comme occupé
+                        io.to(waitingSender.socketId).emit('invite:busy', { targetPseudo: cur.pseudo });
+                      }
                     }
-                  }
+                  });
                   delete bar.inviteQueues[currentTableId];
                 }
                 // Marquer la table comme déconnectée dans le classement (reste visible en grisé)
