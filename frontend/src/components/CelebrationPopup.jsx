@@ -156,6 +156,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                 : isBet
                   ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
                   : <>C'est parti&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
+              }
             </p>
             <p className="text-sm" style={{ color: '#4A6FA5', marginTop: 2 }}>{subtitle}</p>
           </div>
