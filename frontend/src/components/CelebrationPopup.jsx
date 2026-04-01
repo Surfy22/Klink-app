@@ -126,8 +126,10 @@ export default function CelebrationPopup({ celebration, onClose }) {
         height:       'fit-content',
       }}>
       <div
-        className="relative overflow-hidden w-full animate-bounce-in flex flex-col"
+        className="relative w-full animate-bounce-in flex flex-col"
         style={{
+          overflow:            'clip',
+          alignSelf:           'flex-start',
           height:              'fit-content',
           background:          'rgba(255,255,255,0.88)',
           borderRadius:        24,
