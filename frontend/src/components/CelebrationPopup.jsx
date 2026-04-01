@@ -153,14 +153,14 @@ export default function CelebrationPopup({ celebration, onClose }) {
                 ? <>Égalité&nbsp;! <HandsSVG /></>
                 : isBet
                   ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
-                  : "C'est parti ! 🎉"}
+                  : <>C'est parti&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
             </p>
-            <p className="text-sm mt-1" style={{ color: '#4A6FA5' }}>{subtitle}</p>
+            <p className="text-sm" style={{ color: '#4A6FA5', marginTop: 4 }}>{subtitle}</p>
           </div>
 
           {/* Deux avatars */}
           <div className="flex items-center justify-center gap-4 shrink-0">
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <Avatar pseudo={table1.pseudo} photo={table1.photo} size={68} active />
               <span className="font-bold text-sm text-center max-w-[90px] truncate" style={{ color: '#0A1628' }}>
                 {table1.pseudo}
@@ -174,7 +174,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
               </div>
             </div>
 
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <Avatar pseudo={table2.pseudo} photo={table2.photo} size={68} active />
               <span className="font-bold text-sm text-center max-w-[90px] truncate" style={{ color: '#0A1628' }}>
                 {table2.pseudo}
@@ -184,7 +184,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           </div>
 
           {/* Message */}
-          <div className="flex-1 flex items-center justify-center">
+          <div>
             <div style={{
               background:   '#FFFFFF',
               border:       '1.5px solid #E8EDF5',
