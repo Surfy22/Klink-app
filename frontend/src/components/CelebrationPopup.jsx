@@ -55,27 +55,6 @@ const ICONS = {
   },
 };
 
-/* ── Flamme SVG — base large, pointe fine ────────────────────────────────── */
-const FlameSVG = ({ size = 38 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24"
-       style={{
-         filter:        'drop-shadow(0 0 10px rgba(255,100,0,0.9)) drop-shadow(0 0 20px rgba(255,50,0,0.6))',
-         display:       'inline-block',
-         verticalAlign: 'middle',
-       }}>
-    <defs>
-      <linearGradient id="flameGrad" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%"   stopColor="#FFD700" />
-        <stop offset="50%"  stopColor="#FF6B35" />
-        <stop offset="100%" stopColor="#FF0000" />
-      </linearGradient>
-    </defs>
-    {/* Flamme principale — large en bas, pointe vers le haut */}
-    <path d="M12 2C11 5 7 9 7 14a5 5 0 0010 0c0-2.5-1-4.5-2.5-6 .5 2-1 4-2.5 4.2A3 3 0 019.5 9C9.5 6 11 2 12 2z" fill="url(#flameGrad)" />
-    {/* Base large */}
-    <ellipse cx="12" cy="19" rx="4" ry="1.5" fill="url(#flameGrad)" opacity="0.5" />
-  </svg>
-);
 
 const HandsSVG = () => (
   <span style={{ fontSize: 28, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🤝</span>
@@ -136,20 +115,24 @@ export default function CelebrationPopup({ celebration, onClose }) {
         </div>
       )}
 
+      {/* Gradient border wrapper — même style qu'InvitationAlert */}
+      <div style={{
+        background:   'linear-gradient(135deg, #00FF87, #00D4FF)',
+        padding:      '1.5px',
+        borderRadius: 26,
+        boxShadow:    '0 0 28px rgba(0,255,135,0.28), 0 0 56px rgba(0,212,255,0.16), 0 20px 40px rgba(0,0,0,0.30)',
+        width:        '100%',
+        maxWidth:     '24rem',
+      }}>
       <div
-        className="relative rounded-3xl overflow-hidden w-full max-w-sm animate-bounce-in flex flex-col"
+        className="relative overflow-hidden w-full animate-bounce-in flex flex-col"
         style={{
-          height:     '80vh',
-          maxHeight:  620,
-          background: 'rgba(255,255,255,0.88)',
-          border:     isTie
-            ? '1.5px solid rgba(255,77,109,0.40)'
-            : '1.5px solid rgba(0,212,255,0.28)',
+          height:              '80vh',
+          maxHeight:           580,
+          background:          'rgba(255,255,255,0.88)',
+          borderRadius:        24,
           backdropFilter:      'blur(24px)',
           WebkitBackdropFilter:'blur(24px)',
-          boxShadow: isTie
-            ? '0 0 40px rgba(255,77,109,0.12), 0 20px 40px rgba(0,0,0,0.20)'
-            : '0 0 40px rgba(0,255,135,0.12), 0 20px 40px rgba(0,0,0,0.20)',
         }}
       >
         {/* Barre gradient */}
@@ -162,21 +145,21 @@ export default function CelebrationPopup({ celebration, onClose }) {
           }}
         />
 
-        <div className="flex flex-col flex-1 p-6 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden" style={{ padding: '16px 20px', gap: 12 }}>
           {/* Titre */}
-          <div className="text-center mb-6 shrink-0">
+          <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
               {isTie
                 ? <>Égalité&nbsp;! <HandsSVG /></>
                 : isBet
-                  ? <>Le défi est lancé&nbsp;! <FlameSVG size={38} /></>
+                  ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 32, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
                   : "C'est parti ! 🎉"}
             </p>
             <p className="text-sm mt-1" style={{ color: '#4A6FA5' }}>{subtitle}</p>
           </div>
 
           {/* Deux avatars */}
-          <div className="flex items-center justify-center gap-5 mb-6 shrink-0">
+          <div className="flex items-center justify-center gap-4 shrink-0">
             <div className="flex flex-col items-center gap-2">
               <Avatar pseudo={table1.pseudo} photo={table1.photo} size={76} active />
               <span className="font-bold text-sm text-center max-w-[90px] truncate" style={{ color: '#0A1628' }}>
@@ -206,10 +189,10 @@ export default function CelebrationPopup({ celebration, onClose }) {
               background:   '#FFFFFF',
               border:       '1.5px solid #E8EDF5',
               borderRadius: 18,
-              padding:      24,
+              padding:      '14px 16px',
               boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
               margin:       '0 4px',
-              minHeight:    100,
+              minHeight:    72,
             }}>
               <p style={{
                 fontSize:      11,
@@ -252,7 +235,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           {/* CTA */}
           <button
             onClick={onClose}
-            className="w-full py-4 mt-5 rounded-2xl font-black text-xl shrink-0 transition-all active:scale-95"
+            className="w-full py-3 rounded-2xl font-black text-lg shrink-0 transition-all active:scale-95"
             style={isTie ? {
               background: 'rgba(10,22,40,0.07)',
               color:      'rgba(10,22,40,0.60)',
@@ -267,6 +250,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           </button>
         </div>
       </div>
+      </div>{/* /gradient border wrapper */}
     </div>
   );
 }
