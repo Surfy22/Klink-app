@@ -145,14 +145,14 @@ export default function CelebrationPopup({ celebration, onClose }) {
           }}
         />
 
-        <div className="flex flex-col flex-1 overflow-hidden" style={{ padding: '16px 20px', gap: 12 }}>
+        <div className="flex flex-col flex-1 overflow-hidden" style={{ padding: '12px 16px', gap: 8 }}>
           {/* Titre */}
           <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
               {isTie
                 ? <>Égalité&nbsp;! <HandsSVG /></>
                 : isBet
-                  ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 32, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
+                  ? <>Le défi est lancé&nbsp;! <span style={{ fontSize: 30, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🔥</span></>
                   : "C'est parti ! 🎉"}
             </p>
             <p className="text-sm mt-1" style={{ color: '#4A6FA5' }}>{subtitle}</p>
@@ -161,7 +161,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           {/* Deux avatars */}
           <div className="flex items-center justify-center gap-4 shrink-0">
             <div className="flex flex-col items-center gap-2">
-              <Avatar pseudo={table1.pseudo} photo={table1.photo} size={76} active />
+              <Avatar pseudo={table1.pseudo} photo={table1.photo} size={68} active />
               <span className="font-bold text-sm text-center max-w-[90px] truncate" style={{ color: '#0A1628' }}>
                 {table1.pseudo}
               </span>
@@ -175,7 +175,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
             </div>
 
             <div className="flex flex-col items-center gap-2">
-              <Avatar pseudo={table2.pseudo} photo={table2.photo} size={76} active />
+              <Avatar pseudo={table2.pseudo} photo={table2.photo} size={68} active />
               <span className="font-bold text-sm text-center max-w-[90px] truncate" style={{ color: '#0A1628' }}>
                 {table2.pseudo}
               </span>
@@ -189,10 +189,10 @@ export default function CelebrationPopup({ celebration, onClose }) {
               background:   '#FFFFFF',
               border:       '1.5px solid #E8EDF5',
               borderRadius: 18,
-              padding:      '14px 16px',
+              padding:      '12px 14px',
               boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
               margin:       '0 4px',
-              minHeight:    72,
+              minHeight:    64,
             }}>
               <p style={{
                 fontSize:      11,
