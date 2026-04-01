@@ -188,16 +188,25 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
             onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
             style={{
-              background:   'linear-gradient(135deg, #FF4D4D, #E51B1B)',
-              boxShadow:    '0 4px 15px rgba(239,68,68,0.4)',
-              border:       'none',
-              color:        'white',
-              fontWeight:   700,
-              borderRadius: 14,
-              padding:      '14px 0',
-              flex:         1,
-              cursor:       'pointer',
-              transition:   'transform 150ms ease',
+              flex:           1,
+              minWidth:       0,
+              boxSizing:      'border-box',
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              gap:            6,
+              background:     'linear-gradient(135deg, #FF4D4D, #E51B1B)',
+              boxShadow:      '0 4px 15px rgba(239,68,68,0.4)',
+              border:         'none',
+              color:          'white',
+              fontWeight:     700,
+              borderRadius:   14,
+              padding:        '14px 8px',
+              cursor:         'pointer',
+              transition:     'transform 150ms ease',
+              fontSize:       'clamp(13px, 3.5vw, 16px)',
+              whiteSpace:     'nowrap',
+              overflow:       'hidden',
             }}
           >
             Refuser
@@ -206,8 +215,27 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             onClick={handleAccept}
             onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
             onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
-            className="btn-action btn-gradient"
-            style={{ color: '#000' }}
+            style={{
+              flex:           1,
+              minWidth:       0,
+              boxSizing:      'border-box',
+              display:        'flex',
+              alignItems:     'center',
+              justifyContent: 'center',
+              gap:            6,
+              background:     'linear-gradient(135deg, #00FF87, #00D4FF)',
+              boxShadow:      '0 4px 15px rgba(0,255,135,0.35)',
+              border:         'none',
+              color:          '#000',
+              fontWeight:     900,
+              borderRadius:   14,
+              padding:        '14px 8px',
+              cursor:         'pointer',
+              transition:     'transform 150ms ease',
+              fontSize:       'clamp(13px, 3.5vw, 16px)',
+              whiteSpace:     'nowrap',
+              overflow:       'hidden',
+            }}
           >
             ✅ Accepter
           </button>
