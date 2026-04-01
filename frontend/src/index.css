@@ -247,6 +247,26 @@ h1, h2, h3 {
   pointer-events: none;
 }
 
+/* ─── Boutons action (Refuser / Accepter) — responsive ──────────────────── */
+.btn-action {
+  font-size:   16px;
+  padding:     16px 12px;
+  white-space: nowrap;
+  min-width:   0;
+  flex:        1;
+  border-radius: 1rem;
+  font-weight: 900;
+  cursor:      pointer;
+  border:      none;
+  transition:  transform 150ms ease;
+}
+@media (max-width: 360px) {
+  .btn-action {
+    font-size: 14px;
+    padding:   12px 8px;
+  }
+}
+
 /* ─── Twemoji ────────────────────────────────────────────────────────────── */
 img.twemoji {
   height:         1.15em;

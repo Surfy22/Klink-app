@@ -149,7 +149,7 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             background:   '#FFFFFF',
             border:       '1.5px solid #E8EDF5',
             borderRadius: 18,
-            padding:      18,
+            padding:      '16px 18px',
             boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
             display:      'flex',
             alignItems:   'flex-start',
@@ -182,26 +182,25 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3">
+        <div style={{ display: 'flex', flexDirection: 'row', gap: 12, width: '100%' }}>
           <button
             onClick={handleDecline}
             onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
             onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
-            className="flex-1 py-4 rounded-2xl text-base"
+            className="btn-action"
             style={{
-              background:  'linear-gradient(135deg, #EF4444, #DC2626)',
-              color:       '#fff',
-              fontWeight:  900,
-              border:      'none',
-              cursor:      'pointer',
-              transition:  'transform 150ms ease',
+              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              color:      '#FFFFFF',
             }}
           >
             Refuser
           </button>
           <button
             onClick={handleAccept}
-            className="flex-1 py-4 rounded-2xl font-black text-black transition-all active:scale-95 text-base btn-gradient"
+            onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+            onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
+            className="btn-action btn-gradient"
+            style={{ color: '#000' }}
           >
             ✅ Accepter
           </button>
