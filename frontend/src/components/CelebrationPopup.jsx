@@ -55,35 +55,50 @@ const ICONS = {
   },
 };
 
-/* ── Flamme SVG ──────────────────────────────────────────────────────────── */
-const FlameSVG = ({ size = 28 }) => (
+/* ── Flamme SVG — base large, pointe fine ────────────────────────────────── */
+const FlameSVG = ({ size = 32 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24"
-       style={{ filter: 'drop-shadow(0 0 6px rgba(255,100,0,0.7))', display: 'inline-block', verticalAlign: 'middle' }}>
+       style={{
+         filter:        'drop-shadow(0 0 8px rgba(255,100,0,0.8)) drop-shadow(0 0 16px rgba(255,50,0,0.5))',
+         display:       'inline-block',
+         verticalAlign: 'middle',
+       }}>
     <defs>
       <linearGradient id="flameGrad" x1="0" y1="1" x2="0" y2="0">
-        <stop offset="0%"   stopColor="#FF6B35" />
-        <stop offset="50%"  stopColor="#FF0000" />
-        <stop offset="100%" stopColor="#FFD700" />
+        <stop offset="0%"   stopColor="#FFD700" />
+        <stop offset="50%"  stopColor="#FF6B35" />
+        <stop offset="100%" stopColor="#FF0000" />
       </linearGradient>
     </defs>
-    <path d="M12 2c-1 3-4 6.5-4 10a4 4 0 008 0c0-2-.8-3.8-2-5.2.1 1.6-.9 3.1-2.1 3.5A2.5 2.5 0 019.5 8C9.5 5.2 11 2 12 2z" fill="url(#flameGrad)" />
+    {/* Flamme principale — large en bas, pointe vers le haut */}
+    <path d="M12 2C11 5 7 9 7 14a5 5 0 0010 0c0-2.5-1-4.5-2.5-6 .5 2-1 4-2.5 4.2A3 3 0 019.5 9C9.5 6 11 2 12 2z" fill="url(#flameGrad)" />
+    {/* Base large */}
+    <ellipse cx="12" cy="19" rx="4" ry="1.5" fill="url(#flameGrad)" opacity="0.5" />
   </svg>
 );
 
-/* ── Mains SVG ───────────────────────────────────────────────────────────── */
-const HandsSVG = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
-       style={{ filter: 'drop-shadow(0 0 6px rgba(28,200,138,0.6))', display: 'inline-block', verticalAlign: 'middle' }}>
-    <defs>
-      <linearGradient id="handsGrad" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%"   stopColor="#1CC88A" />
-        <stop offset="100%" stopColor="#00B4D8" />
-      </linearGradient>
-    </defs>
-    <path d="M2 17l4-5h3.5L12 14l2.5-2H18l4 5" stroke="url(#handsGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 14v4h4v-4" stroke="url(#handsGrad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M8 12V9M12 12V8M16 12V9" stroke="url(#handsGrad)" strokeWidth="1.8" strokeLinecap="round" />
+/* ── Mains SVG — cercle coloré style icônes app ──────────────────────────── */
+const HandsIcon = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path d="M2 16l3-4h4l3 2 3-2h4l3 4" stroke="#1CC88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10 14v5h4v-5" stroke="#1CC88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M7 12V9.5M12 12V9M17 12V9.5" stroke="#1CC88A" strokeWidth="1.7" strokeLinecap="round" />
   </svg>
+);
+
+const HandsSVG = () => (
+  <div style={{
+    width:          48,
+    height:         48,
+    borderRadius:   '50%',
+    background:     'rgba(28,200,138,0.10)',
+    display:        'flex',
+    alignItems:     'center',
+    justifyContent: 'center',
+    filter:         'drop-shadow(0 0 6px rgba(28,200,138,0.5))',
+  }}>
+    <HandsIcon size={28} />
+  </div>
 );
 
 function ConfettiPiece({ idx }) {
@@ -172,9 +187,9 @@ export default function CelebrationPopup({ celebration, onClose }) {
           <div className="text-center mb-6 shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
               {isTie
-                ? <>Égalité&nbsp;! <HandsSVG size={28} /></>
+                ? <>Égalité&nbsp;! <HandsIcon size={28} /></>
                 : isBet
-                  ? <>Le défi est lancé&nbsp;! <FlameSVG size={28} /></>
+                  ? <>Le défi est lancé&nbsp;! <FlameSVG size={32} /></>
                   : "C'est parti ! 🎉"}
             </p>
             <p className="text-sm mt-1" style={{ color: '#4A6FA5' }}>{subtitle}</p>
@@ -192,7 +207,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
 
             <div className="flex flex-col items-center gap-1">
               <div className="animate-float" style={{ lineHeight: 1 }}>
-                {isTie ? <span style={{ fontSize: '2.25rem' }}>⚡</span> : <HandsSVG size={40} />}
+                {isTie ? <span style={{ fontSize: '2.25rem' }}>⚡</span> : <HandsSVG />}
               </div>
             </div>
 
@@ -207,12 +222,13 @@ export default function CelebrationPopup({ celebration, onClose }) {
 
           {/* Message */}
           <div className="flex-1 flex items-center justify-center">
-            <div className="w-full" style={{
+            <div style={{
               background:   '#FFFFFF',
               border:       '1.5px solid #E8EDF5',
               borderRadius: 18,
-              padding:      '16px 18px',
+              padding:      '20px 22px',
               boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
+              margin:       '0 8px',
             }}>
               <p style={{
                 fontSize:      11,
@@ -229,7 +245,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                   {"Décidez à l'amiable qui a gagné ! 🏆"}
                 </p>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {msgIcon && (
                     <div style={{
                       flexShrink:     0,
@@ -244,7 +260,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                       {msgIcon.svg}
                     </div>
                   )}
-                  <span style={{ fontSize: 14, fontWeight: 500, color: '#1a1a2e', lineHeight: 1.4 }}>
+                  <span style={{ fontSize: 15, fontWeight: 500, color: '#1a1a2e', lineHeight: 1.5 }}>
                     {msgText}
                   </span>
                 </div>
