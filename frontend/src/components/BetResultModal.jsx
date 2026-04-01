@@ -216,16 +216,24 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
                 onClick={() => { setStep('pick'); setChosen(null); }}
+                onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+                onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
                 style={{
-                  flex:         1,
-                  padding:      '15px 8px',
-                  borderRadius: '18px',
-                  fontWeight:   700,
-                  fontSize:     '15px',
-                  background:   'transparent',
-                  border:       '1.5px solid rgba(255,77,109,0.55)',
-                  color:        '#FF4D6D',
-                  cursor:       'pointer',
+                  flex:           1,
+                  padding:        '15px 8px',
+                  borderRadius:   '18px',
+                  fontWeight:     700,
+                  fontSize:       '15px',
+                  background:     'linear-gradient(135deg, #FF4D4D, #E51B1B)',
+                  boxShadow:      '0 4px 15px rgba(239,68,68,0.4)',
+                  border:         'none',
+                  color:          '#FFFFFF',
+                  cursor:         'pointer',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  gap:            '6px',
+                  transition:     'transform 150ms ease',
                 }}
               >
                 ❌ Annuler
