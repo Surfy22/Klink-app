@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Avatar from '../components/Avatar';
-import InvitationAlert from '../components/InvitationAlert';
 import ContactModal from '../components/QRModal';
 import KlinkLogo from '../components/KlinkLogo';
 import AnnouncementOverlay from '../components/AnnouncementToast';
@@ -50,7 +49,6 @@ export default function TablesPage({
   user, tables, scores, leaderboardMessage, tableId, barId,
   connected,
   onInvite,
-  pendingInvite, onAcceptInvite, onDeclineInvite,
   inviteResponse,
   announcement, onDismissAnnouncement,
   senderNotif,
@@ -325,13 +323,6 @@ export default function TablesPage({
         </div>
       )}
 
-      {pendingInvite && (
-        <InvitationAlert
-          invite={pendingInvite}
-          onAccept={onAcceptInvite}
-          onDecline={onDeclineInvite}
-        />
-      )}
 
       {showQR && (
         <ContactModal

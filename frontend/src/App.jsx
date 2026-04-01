@@ -9,6 +9,7 @@ import InvitePage from './pages/InvitePage';
 import CelebrationPopup from './components/CelebrationPopup';
 import BetResultModal from './components/BetResultModal';
 import ContactAlert from './components/ContactAlert';
+import InvitationAlert from './components/InvitationAlert';
 
 /** Retourne l'UUID persistant de cette table (localStorage), le crée si absent. */
 function getOrCreateTableUUID(barId, tableId) {
@@ -83,6 +84,7 @@ export default function App() {
     };
     const onInviteAccepted = (celebrationData) => {
       setPendingInvite(null);
+      setMyStatus('En jeu');
       setCelebration(celebrationData);
     };
     const onAnnouncement = ({ message }) => {
@@ -93,6 +95,7 @@ export default function App() {
     };
     const onBetTie = (tieData) => {
       setBetPending(null);
+      setMyStatus(null);
       setCelebration({ isTie: true, ...tieData });
     };
 
@@ -243,6 +246,7 @@ export default function App() {
     } else if (!celebration?.isTie) {
       // Invitation simple (non-pari) : libérer le statut "En jeu"
       socket.emit('table:status', { barId, tableId, status: null });
+      setMyStatus(null);
     }
     setCelebration(null);
     setScreen('tables');
@@ -260,6 +264,7 @@ export default function App() {
     setBetPending(null);
     setCelebration(null);
     setPendingInvite(null);
+    setMyStatus(null);
     setScreen('tables');
   }, [betPending]);
 
@@ -281,9 +286,6 @@ export default function App() {
           barId={barId}
           connected={connected}
           onInvite={handleInvite}
-          pendingInvite={pendingInvite}
-          onAcceptInvite={handleAcceptInvite}
-          onDeclineInvite={handleDeclineInvite}
           inviteResponse={inviteResponse}
           announcement={announcement}
           onDismissAnnouncement={() => setAnnouncement(null)}
@@ -309,6 +311,14 @@ export default function App() {
           celebration={betPending}
           currentTableId={tableId}
           onResult={handleBetResult}
+        />
+      )}
+
+      {pendingInvite && (
+        <InvitationAlert
+          invite={pendingInvite}
+          onAccept={handleAcceptInvite}
+          onDecline={handleDeclineInvite}
         />
       )}
 
