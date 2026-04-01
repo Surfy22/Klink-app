@@ -114,7 +114,7 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
           overflow:     'hidden',
           width:        '100%',
           height:       '100%',
-          minHeight:    130,
+          minHeight:    160,
           boxSizing:    'border-box',
           textAlign:    'left',
           cursor:       'pointer',
@@ -321,7 +321,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             transform:  `scale(${gridScale})`,
             transition: `transform ${scaleTiming}`,
           }}>
-            <div style={{ position: 'relative', height: 272 }}>
+            <div style={{ position: 'relative', height: 332 }}>
               {[
                 { key: 'defi', items: QUICK_MESSAGES },
                 { key: 'pari', items: PRESET_BETS    },
