@@ -139,15 +139,16 @@ export default function CelebrationPopup({ celebration, onClose }) {
       >
         {/* Barre gradient */}
         <div
-          className="h-px w-full shrink-0"
+          className="w-full shrink-0"
           style={{
+            height:     '3px',
             background: isTie
               ? 'linear-gradient(90deg, #FF4D6D, #FFD700, #FF4D6D)'
-              : 'linear-gradient(90deg, #00FF87, #00D4FF, #FFD700)',
+              : 'linear-gradient(90deg, #00FF87, #00D4FF)',
           }}
         />
 
-        <div className="flex flex-col" style={{ padding: '12px 16px', gap: 4 }}>
+        <div className="flex flex-col" style={{ padding: '16px 16px', gap: 4 }}>
           {/* Titre */}
           <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
