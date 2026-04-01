@@ -147,7 +147,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           }}
         />
 
-        <div className="flex flex-col" style={{ padding: '8px 16px', gap: 4 }}>
+        <div className="flex flex-col" style={{ padding: '12px 16px', gap: 4 }}>
           {/* Titre */}
           <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
