@@ -119,11 +119,7 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
             }}
           >
             Entrer dans le bar{' '}
-            <span style={pseudo.trim() ? {
-              display: 'inline-block',
-              fontSize: 18,
-              filter: 'drop-shadow(0 0 6px rgba(28,200,138,1)) drop-shadow(0 0 12px rgba(0,180,216,0.9)) drop-shadow(0 0 25px rgba(0,180,216,0.6))',
-            } : { display: 'inline-block', fontSize: 18 }}>🔌</span>
+            <span className={pseudo.trim() ? 'electric-icon' : undefined} style={pseudo.trim() ? undefined : { display: 'inline-block', fontSize: 18 }}>🔌</span>
           </button>
         </form>
       </div>

@@ -387,11 +387,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             {sending ? 'Envoi…' : (
               <>
                 Envoyer l'invitation{' '}
-                <span style={(message && !sending) ? {
-                  display:  'inline-block',
-                  fontSize: 18,
-                  filter:   'drop-shadow(0 0 6px rgba(28,200,138,1)) drop-shadow(0 0 12px rgba(0,180,216,0.9)) drop-shadow(0 0 25px rgba(0,180,216,0.6))',
-                } : { display: 'inline-block', fontSize: 18 }}>🔌</span>
+                <span className={(message && !sending) ? 'electric-icon' : undefined} style={(message && !sending) ? undefined : { display: 'inline-block', fontSize: 18 }}>🔌</span>
               </>
             )}
           </button>
