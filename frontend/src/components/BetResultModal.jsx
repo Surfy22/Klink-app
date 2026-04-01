@@ -236,7 +236,7 @@ export default function BetResultModal({ celebration, currentTableId, onResult }
                   transition:     'transform 150ms ease',
                 }}
               >
-                ❌ Annuler
+                ✗ Annuler
               </button>
               <button
                 onClick={() => onResult(chosen.pseudo, chosen.tableId, chosen.photo)}
