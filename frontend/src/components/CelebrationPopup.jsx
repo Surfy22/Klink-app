@@ -106,7 +106,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-2 animate-fade-in"
       style={{ background: 'rgba(8,15,30,0.75)', backdropFilter: 'blur(18px)' }}
     >
       {!isTie && (
@@ -137,7 +137,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
       >
         {/* Barre gradient */}
         <div
-          className="h-1 w-full shrink-0"
+          className="h-px w-full shrink-0"
           style={{
             background: isTie
               ? 'linear-gradient(90deg, #FF4D6D, #FFD700, #FF4D6D)'
@@ -145,7 +145,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
           }}
         />
 
-        <div className="flex flex-col" style={{ padding: '12px 16px', gap: 8 }}>
+        <div className="flex flex-col" style={{ padding: '8px 16px', gap: 4 }}>
           {/* Titre */}
           <div className="text-center shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
@@ -192,7 +192,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
               padding:      '12px 14px',
               boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
               margin:       '0 4px',
-              minHeight:    64,
+              minHeight:    0,
             }}>
               <p style={{
                 fontSize:      11,
