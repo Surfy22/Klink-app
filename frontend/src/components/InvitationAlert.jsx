@@ -189,8 +189,9 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
             className="btn-action"
             style={{
-              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              background: 'linear-gradient(135deg, #FF4D4D, #E51B1B)',
               color:      '#FFFFFF',
+              boxShadow:  '0 4px 15px rgba(239,68,68,0.4)',
             }}
           >
             Refuser
