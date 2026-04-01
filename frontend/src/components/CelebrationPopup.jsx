@@ -56,10 +56,10 @@ const ICONS = {
 };
 
 /* ── Flamme SVG — base large, pointe fine ────────────────────────────────── */
-const FlameSVG = ({ size = 32 }) => (
+const FlameSVG = ({ size = 38 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24"
        style={{
-         filter:        'drop-shadow(0 0 8px rgba(255,100,0,0.8)) drop-shadow(0 0 16px rgba(255,50,0,0.5))',
+         filter:        'drop-shadow(0 0 10px rgba(255,100,0,0.9)) drop-shadow(0 0 20px rgba(255,50,0,0.6))',
          display:       'inline-block',
          verticalAlign: 'middle',
        }}>
@@ -77,28 +77,8 @@ const FlameSVG = ({ size = 32 }) => (
   </svg>
 );
 
-/* ── Mains SVG — cercle coloré style icônes app ──────────────────────────── */
-const HandsIcon = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M2 16l3-4h4l3 2 3-2h4l3 4" stroke="#1CC88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10 14v5h4v-5" stroke="#1CC88A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M7 12V9.5M12 12V9M17 12V9.5" stroke="#1CC88A" strokeWidth="1.7" strokeLinecap="round" />
-  </svg>
-);
-
 const HandsSVG = () => (
-  <div style={{
-    width:          48,
-    height:         48,
-    borderRadius:   '50%',
-    background:     'rgba(28,200,138,0.10)',
-    display:        'flex',
-    alignItems:     'center',
-    justifyContent: 'center',
-    filter:         'drop-shadow(0 0 6px rgba(28,200,138,0.5))',
-  }}>
-    <HandsIcon size={28} />
-  </div>
+  <span style={{ fontSize: 28, lineHeight: 1, display: 'inline-block', verticalAlign: 'middle' }}>🤝</span>
 );
 
 function ConfettiPiece({ idx }) {
@@ -187,9 +167,9 @@ export default function CelebrationPopup({ celebration, onClose }) {
           <div className="text-center mb-6 shrink-0">
             <p className="text-3xl font-black leading-tight" style={{ color: '#0A1628' }}>
               {isTie
-                ? <>Égalité&nbsp;! <HandsIcon size={28} /></>
+                ? <>Égalité&nbsp;! <HandsSVG /></>
                 : isBet
-                  ? <>Le défi est lancé&nbsp;! <FlameSVG size={32} /></>
+                  ? <>Le défi est lancé&nbsp;! <FlameSVG size={38} /></>
                   : "C'est parti ! 🎉"}
             </p>
             <p className="text-sm mt-1" style={{ color: '#4A6FA5' }}>{subtitle}</p>
@@ -226,9 +206,10 @@ export default function CelebrationPopup({ celebration, onClose }) {
               background:   '#FFFFFF',
               border:       '1.5px solid #E8EDF5',
               borderRadius: 18,
-              padding:      '20px 22px',
+              padding:      24,
               boxShadow:    '0 2px 12px rgba(0,0,0,0.06)',
-              margin:       '0 8px',
+              margin:       '0 4px',
+              minHeight:    100,
             }}>
               <p style={{
                 fontSize:      11,
@@ -245,12 +226,12 @@ export default function CelebrationPopup({ celebration, onClose }) {
                   {"Décidez à l'amiable qui a gagné ! 🏆"}
                 </p>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                   {msgIcon && (
                     <div style={{
                       flexShrink:     0,
-                      width:          48,
-                      height:         48,
+                      width:          56,
+                      height:         56,
                       borderRadius:   '50%',
                       background:     msgIcon.bg,
                       display:        'flex',
@@ -260,7 +241,7 @@ export default function CelebrationPopup({ celebration, onClose }) {
                       {msgIcon.svg}
                     </div>
                   )}
-                  <span style={{ fontSize: 15, fontWeight: 500, color: '#1a1a2e', lineHeight: 1.5 }}>
+                  <span style={{ fontSize: 16, fontWeight: 500, color: '#1a1a2e', lineHeight: 1.5 }}>
                     {msgText}
                   </span>
                 </div>
