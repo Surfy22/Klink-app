@@ -187,11 +187,17 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
             onClick={handleDecline}
             onTouchStart={(e) => { e.currentTarget.style.transform = 'scale(0.97)'; }}
             onTouchEnd={(e)   => { e.currentTarget.style.transform = 'scale(1)'; }}
-            className="btn-action"
             style={{
-              background: 'linear-gradient(135deg, #FF4D4D, #E51B1B)',
-              color:      '#FFFFFF',
-              boxShadow:  '0 4px 15px rgba(239,68,68,0.4)',
+              background:   'linear-gradient(135deg, #FF4D4D, #E51B1B)',
+              boxShadow:    '0 4px 15px rgba(239,68,68,0.4)',
+              border:       'none',
+              color:        'white',
+              fontWeight:   700,
+              borderRadius: 14,
+              padding:      '14px 0',
+              flex:         1,
+              cursor:       'pointer',
+              transition:   'transform 150ms ease',
             }}
           >
             Refuser
