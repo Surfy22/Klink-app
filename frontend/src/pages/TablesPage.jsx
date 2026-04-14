@@ -364,12 +364,12 @@ export default function TablesPage({
                       transition: 'opacity 0.4s',
                     }}
                   >
-                    {badge && (
-                      <span className="text-center leading-tight font-black"
-                        style={{ fontSize: '9px', color: i === 0 ? '#FFD700' : '#00FF87', maxWidth: '64px' }}>
-                        {badge}
-                      </span>
-                    )}
+                    {/* Badge — toujours rendu pour hauteur uniforme, invisible si absent */}
+                    <span className="text-center leading-tight font-black"
+                      style={{ fontSize: '9px', color: i === 0 ? '#FFD700' : '#00FF87', maxWidth: '64px',
+                               visibility: badge ? 'visible' : 'hidden' }}>
+                      {badge ?? '\u00A0'}
+                    </span>
                     <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
                     <Avatar pseudo={pseudo ?? uuid} photo={photo ?? null} size={36} />
                     <span className="text-xs font-bold truncate max-w-[64px] text-center"
