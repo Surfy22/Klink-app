@@ -346,13 +346,11 @@ export default function TablesPage({
               ([uuid, entry], i) => {
                 const { wins, pseudo, photo, connected: conn } = entry;
                 const isFirst = i === 0;
-                const badge = lbTab === 'evening' && isFirst
-                  ? '🌙 Leader de la soirée'
-                  : lbTab === 'month' && isFirst
-                  ? '👑 Légende du mois'
-                  : null;
+                const badge = lbTab === 'evening' && isFirst ? '🌙'
+                           : lbTab === 'month'   && isFirst ? '👑'
+                           : null;
                 return (
-                  <div key={uuid} className="flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl"
+                  <div key={uuid} className="relative flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl"
                     style={{
                       background: cardBg(i),
                       border:     cardBorder(i),
@@ -364,12 +362,15 @@ export default function TablesPage({
                       transition: 'opacity 0.4s',
                     }}
                   >
-                    {/* Badge — toujours rendu pour hauteur uniforme, invisible si absent */}
-                    <span className="text-center leading-tight font-black"
-                      style={{ fontSize: '9px', color: i === 0 ? '#FFD700' : '#00FF87', maxWidth: '64px',
-                               visibility: badge ? 'visible' : 'hidden' }}>
-                      {badge ?? '\u00A0'}
-                    </span>
+                    {/* Emoji badge superposé en haut à droite, sans impact sur la hauteur */}
+                    {badge && (
+                      <span style={{
+                        position: 'absolute', top: 4, right: 4,
+                        fontSize: '12px', lineHeight: 1,
+                      }}>
+                        {badge}
+                      </span>
+                    )}
                     <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
                     <Avatar pseudo={pseudo ?? uuid} photo={photo ?? null} size={36} />
                     <span className="text-xs font-bold truncate max-w-[64px] text-center"
