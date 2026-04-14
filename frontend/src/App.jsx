@@ -37,6 +37,8 @@ export default function App() {
   const [myStatus, setMyStatus]                     = useState(null);
   const [tables, setTables]                         = useState([]);
   const [scores, setScores]                         = useState({});
+  const [leaderboard, setLeaderboard]               = useState({ hourly: {}, evening: {}, monthly: {} });
+  const [roundReset, setRoundReset]                 = useState(0); // incrémenté à chaque reset horaire
   const [leaderboardMessage, setLeaderboardMessage] = useState('');
   const [inviteTarget, setInviteTarget]             = useState(null);
   const [pendingInvite, setPendingInvite]           = useState(null);
@@ -69,6 +71,12 @@ export default function App() {
     };
     const onScoresUpdated = (updatedScores) => {
       setScores(updatedScores);
+    };
+    const onLeaderboardUpdated = (data) => {
+      setLeaderboard(data);
+    };
+    const onRoundReset = () => {
+      setRoundReset((n) => n + 1);
     };
     const onLeaderboardMsg = ({ message }) => {
       setLeaderboardMessage(message);
@@ -141,6 +149,8 @@ export default function App() {
     socket.on('disconnect',              onDisconnect);
     socket.on('tables:updated',          onTablesUpdated);
     socket.on('scores:updated',          onScoresUpdated);
+    socket.on('leaderboard:updated',     onLeaderboardUpdated);
+    socket.on('leaderboard:round-reset', onRoundReset);
     socket.on('bar:leaderboard-message', onLeaderboardMsg);
     socket.on('invite:receive',          onInviteReceive);
     socket.on('invite:response',         onInviteResponse);
@@ -159,6 +169,8 @@ export default function App() {
       socket.off('disconnect',              onDisconnect);
       socket.off('tables:updated',          onTablesUpdated);
       socket.off('scores:updated',          onScoresUpdated);
+      socket.off('leaderboard:updated',     onLeaderboardUpdated);
+      socket.off('leaderboard:round-reset', onRoundReset);
       socket.off('bar:leaderboard-message', onLeaderboardMsg);
       socket.off('invite:receive',          onInviteReceive);
       socket.off('invite:response',         onInviteResponse);
@@ -281,6 +293,8 @@ export default function App() {
           onStatusChange={handleStatusChange}
           tables={tables}
           scores={scores}
+          leaderboard={leaderboard}
+          roundReset={roundReset}
           leaderboardMessage={leaderboardMessage}
           tableId={tableId}
           barId={barId}

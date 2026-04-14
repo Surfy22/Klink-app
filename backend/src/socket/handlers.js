@@ -3,7 +3,8 @@
  * bars[barId] = {
  *   tables:            { [tableId]: { socketId, pseudo, photo, tableId, status, joinedAt } }
  *   stats:             { invitesSent, betsInProgress }
- *   scores:            { [pseudo]: { wins, tableId } }
+ *   scores:            { [uuid]: { wins, pseudo, photo, tableId, connected } }  — classement soirée (RAM)
+ *   hourlyScores:      { [uuid]: { wins, pseudo, photo, tableId } }             — classement round courant (RAM)
  *   resolvedBets:      Map<betId, timestamp>   (horodatés pour purge)
  *   reservedNames:     { [pseudoNormalisé]: tableId }  (noms réservés jusqu'au reset)
  *   adminSockets:      Set<socketId>
@@ -11,13 +12,55 @@
  *   adminPassword:     string  (6 car. alphanum. majuscules, généré à la création)
  *   adminEmail:        string|null
  * }
+ * monthlyScores[barId] = { [uuid]: { wins, pseudo, photo, tableId } } — classement mensuel (JSON persistant)
  * history[barId] = [{ date, stats, scores }, ...] — 30 derniers jours max
  */
 
 const nodemailer = require('nodemailer');
+const fs         = require('fs');
+const path       = require('path');
 
-const bars     = {};
-const history  = {};
+const DATA_DIR = path.join(__dirname, '../../../data');
+try { fs.mkdirSync(DATA_DIR, { recursive: true }); } catch (_) {}
+
+const bars          = {};
+const history       = {};
+const monthlyScores = {}; // barId → { [uuid]: { wins, pseudo, photo, tableId } }
+
+/* ── Persistance mensuelle ───────────────────────────────────────────────── */
+
+function monthlyFilePath(barId) {
+  return path.join(DATA_DIR, `monthly_scores_${barId}.json`);
+}
+
+function loadMonthlyScores(barId) {
+  if (monthlyScores[barId]) return monthlyScores[barId];
+  try {
+    const raw = fs.readFileSync(monthlyFilePath(barId), 'utf8');
+    monthlyScores[barId] = JSON.parse(raw);
+  } catch (_) {
+    monthlyScores[barId] = {};
+  }
+  return monthlyScores[barId];
+}
+
+function saveMonthlyScores(barId) {
+  try {
+    fs.writeFileSync(monthlyFilePath(barId), JSON.stringify(monthlyScores[barId] ?? {}), 'utf8');
+  } catch (err) {
+    console.error(`[${barId}] Erreur sauvegarde scores mensuels :`, err.message);
+  }
+}
+
+/** Retourne les 3 classements sous forme d'objet { hourly, evening, monthly } */
+function getAllLeaderboards(barId) {
+  const bar = bars[barId];
+  return {
+    hourly:  bar ? { ...bar.hourlyScores } : {},
+    evening: bar ? { ...bar.scores }       : {},
+    monthly: { ...(loadMonthlyScores(barId)) },
+  };
+}
 
 /* ── Mot de passe admin unique par bar ───────────────────────────────────── */
 
@@ -147,6 +190,7 @@ function getBar(barId) {
       tables:             {},
       stats:              { invitesSent: 0, betsInProgress: 0 },
       scores:             {},
+      hourlyScores:       {},
       resolvedBets:       new Map(),
       pendingVotes:       {},         // { [betId]: { voterTableId, winnerTableId, winnerPseudo, winnerPhoto } }
       inviteQueues:       {},         // { [toTableId]: [{ fromTableId, fromPseudo, fromPhoto, message }, ...] }
@@ -230,6 +274,7 @@ function resetBar(barId) {
 
   bar.stats          = { invitesSent: 0, betsInProgress: 0 };
   bar.scores         = {};
+  bar.hourlyScores   = {};
   bar.resolvedBets   = new Map();
   bar.pendingVotes   = {};
   bar.inviteQueues   = {};
@@ -237,6 +282,7 @@ function resetBar(barId) {
 
   if (_io) {
     _io.to(barId).emit('scores:updated', {});
+    _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
     notifyAdmins(_io, barId);
   }
 
@@ -261,6 +307,72 @@ function scheduleMidnightReset() {
 
 scheduleMidnightReset();
 
+/* ── Reset horaire (classement round) ───────────────────────────────────── */
+
+function resetHourlyScores() {
+  for (const barId of Object.keys(bars)) {
+    bars[barId].hourlyScores = {};
+    if (_io) {
+      _io.to(barId).emit('leaderboard:round-reset', {});
+      _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
+    }
+    console.log(`[${barId}] Reset horaire du classement round`);
+  }
+}
+
+function scheduleHourlyReset() {
+  const now         = new Date();
+  const nextHour    = new Date(now);
+  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+  const delay       = nextHour - now;
+  setTimeout(() => {
+    resetHourlyScores();
+    scheduleHourlyReset();
+  }, delay);
+  console.log(`Reset horaire planifié dans ${Math.round(delay / 60000)} min`);
+}
+
+scheduleHourlyReset();
+
+/* ── Reset mensuel (1er du mois) ─────────────────────────────────────────── */
+
+async function resetMonthlyScores() {
+  for (const barId of Object.keys(bars)) {
+    const monthly = loadMonthlyScores(barId);
+    const bar     = bars[barId];
+
+    // Email au gérant avec les stats du mois avant reset
+    if (bar?.adminEmail && mailer) {
+      try {
+        await sendMonthlyReport(barId, monthly, bar);
+      } catch (err) {
+        console.error(`[${barId}] Erreur email mensuel :`, err.message);
+      }
+    }
+
+    monthlyScores[barId] = {};
+    saveMonthlyScores(barId);
+
+    if (_io) {
+      _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
+    }
+    console.log(`[${barId}] Reset mensuel classement`);
+  }
+}
+
+function scheduleMonthlyReset() {
+  const now      = new Date();
+  const next1st  = new Date(now.getFullYear(), now.getMonth() + 1, 1, 0, 0, 0, 0);
+  const delay    = next1st - now;
+  setTimeout(() => {
+    resetMonthlyScores();
+    scheduleMonthlyReset();
+  }, delay);
+  console.log(`Reset mensuel planifié dans ${Math.round(delay / 3600000)} h`);
+}
+
+scheduleMonthlyReset();
+
 /* ── Gestionnaires Socket.io ─────────────────────────────────────────────── */
 
 module.exports = (io) => {
@@ -272,6 +384,7 @@ module.exports = (io) => {
       if (Object.keys(bar.tables).length > 0) {
         io.to(barId).emit('tables:updated', getActiveTables(barId));
         io.to(barId).emit('scores:updated', bar.scores);
+        io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
       }
     }
   }, 10000);
@@ -360,6 +473,9 @@ module.exports = (io) => {
         if (bar.leaderboardMessage) {
           socket.emit('bar:leaderboard-message', { message: bar.leaderboardMessage });
         }
+
+        // Envoie les 3 classements à la table qui rejoint
+        socket.emit('leaderboard:updated', getAllLeaderboards(barId));
 
         notifyAdmins(io, barId);
         console.log(`[${barId}] Table ${tableId} rejoint : "${pseudo}"`);
@@ -600,6 +716,24 @@ module.exports = (io) => {
           bar.scores[uuid].photo = photoToStore;
           console.log(`[${barId}] Photo classement "${winnerPseudo}" (uuid=${uuid}) : ${photoToStore ? 'présente' : 'absente'} (source=${storedPhoto !== null ? 'serveur' : 'client'})`);
 
+          // ── Classement horaire (round) ──────────────────────────────────────
+          if (!bar.hourlyScores[uuid]) {
+            bar.hourlyScores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
+          }
+          bar.hourlyScores[uuid].wins++;
+          bar.hourlyScores[uuid].pseudo = winnerPseudo;
+          bar.hourlyScores[uuid].photo  = photoToStore;
+
+          // ── Classement mensuel (JSON persistant) ────────────────────────────
+          const monthly = loadMonthlyScores(barId);
+          if (!monthly[uuid]) {
+            monthly[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
+          }
+          monthly[uuid].wins++;
+          monthly[uuid].pseudo = winnerPseudo;
+          monthly[uuid].photo  = photoToStore;
+          saveMonthlyScores(barId);
+
           // Libérer le statut "En jeu" des deux tables
           const t1accord = firstVote.voterTableId;
           const t2accord = currentTableId;
@@ -607,6 +741,7 @@ module.exports = (io) => {
           if (bar.tables[t2accord]?.status === 'En jeu') bar.tables[t2accord].status = null;
 
           io.to(barId).emit('scores:updated', bar.scores);
+          io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
           io.to(barId).emit('tables:updated', getActiveTables(barId));
           notifyAdmins(io, barId);
           console.log(`[${barId}] Pari résolu — vainqueur : ${winnerPseudo}`);
@@ -738,6 +873,20 @@ module.exports = (io) => {
         console.log(`[${barId}] Email gérant : ${bar.adminEmail ?? 'supprimé'}`);
       } catch (err) {
         console.error('[admin:setEmail] erreur :', err.message);
+      }
+    });
+
+    socket.on('admin:getMonthlyWinner', (payload) => {
+      try {
+        if (!isAdmin) return;
+        const { barId } = payload ?? {};
+        if (barId !== currentBarId) return;
+        const monthly  = loadMonthlyScores(barId);
+        const entries  = Object.entries(monthly).sort(([, a], [, b]) => b.wins - a.wins);
+        const winner   = entries.length > 0 ? entries[0][1] : null;
+        socket.emit('admin:monthlyWinner', { winner, leaderboard: monthly });
+      } catch (err) {
+        console.error('[admin:getMonthlyWinner] erreur :', err.message);
       }
     });
 
@@ -1031,4 +1180,98 @@ function scheduleWeeklyReport() {
 }
 
 scheduleWeeklyReport();
+
+/* ── Rapport mensuel email ───────────────────────────────────────────────── */
+
+async function sendMonthlyReport(barId, monthly, bar) {
+  if (!mailer) return;
+  const email = bar?.adminEmail;
+  if (!email) return;
+
+  const entries = Object.entries(monthly).sort(([, a], [, b]) => b.wins - a.wins);
+  if (entries.length === 0) return;
+
+  const [winnerUUID, winner] = entries[0];
+  const now    = new Date();
+  const month  = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const totalBets = entries.reduce((s, [, e]) => s + e.wins, 0);
+
+  const avatarHtml = winner.photo
+    ? `<img src="${winner.photo}" width="80" height="80"
+         style="border-radius:50%;border:3px solid #FFD700;display:block;margin:0 auto 12px" />`
+    : `<div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#00FF87,#00D4FF);
+         display:flex;align-items:center;justify-content:center;margin:0 auto 12px;
+         font-size:32px;font-weight:900;color:#0A1628">${(winner.pseudo || '?')[0].toUpperCase()}</div>`;
+
+  const podiumHtml = entries.slice(0, 5).map(([, e], i) => {
+    const medals = ['🥇', '🥈', '🥉', '4.', '5.'];
+    return `<tr>
+      <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+        <span style="color:rgba(255,255,255,0.45);margin-right:8px">${medals[i]}</span>
+        <strong style="color:#fff">${e.pseudo ?? winnerUUID}</strong>
+        <span style="float:right;color:#00FF87;font-weight:700">${e.wins} ⚡</span>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+<body style="background:#0D0D0D;color:#fff;font-family:system-ui,sans-serif;padding:32px;max-width:520px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:28px">
+    <img src="cid:klink-logo@klink" width="56" height="56" alt="KLINK"
+         style="border-radius:10px;display:block;margin:0 auto 12px" />
+    <h1 style="color:#00FF87;font-size:26px;margin:0 0 4px">KLINK</h1>
+    <p style="color:rgba(255,255,255,0.45);font-size:14px;margin:0">Classement du mois — ${month}</p>
+  </div>
+  <div style="background:rgba(255,215,0,0.08);border:1.5px solid rgba(255,215,0,0.5);
+       border-radius:16px;padding:24px;text-align:center;margin-bottom:20px">
+    <p style="color:#FFD700;font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin:0 0 12px">👑 Légende du mois</p>
+    ${avatarHtml}
+    <h2 style="color:#FFD700;font-size:24px;margin:0 0 4px">${winner.pseudo ?? winnerUUID}</h2>
+    <p style="color:#00FF87;font-size:18px;font-weight:700;margin:0">${winner.wins} ⚡ paris gagnés</p>
+  </div>
+  <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:16px 20px;margin-bottom:20px">
+    <table style="width:100%;border-collapse:collapse">
+      <tr><td colspan="2" style="padding-bottom:8px;color:rgba(255,255,255,0.45);font-size:12px;
+           text-transform:uppercase;letter-spacing:.08em">Top 5 du mois</td></tr>
+      ${podiumHtml}
+    </table>
+  </div>
+  <div style="background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.2);
+       border-radius:12px;padding:16px 20px;margin-bottom:24px">
+    <p style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px">Stats du mois</p>
+    <p style="margin:4px 0;color:#fff"><strong style="color:#00D4FF">${totalBets}</strong> paris résolus</p>
+    <p style="margin:4px 0;color:#fff"><strong style="color:#00D4FF">${entries.length}</strong> joueurs uniques</p>
+    <p style="margin:4px 0;color:rgba(255,255,255,0.6);font-size:13px">Période : ${month}</p>
+  </div>
+  <div style="background:linear-gradient(135deg,rgba(0,255,135,0.10),rgba(0,212,255,0.10));
+       border:1px solid rgba(0,255,135,0.25);border-radius:12px;padding:16px 20px;margin-bottom:24px">
+    <p style="color:#00FF87;font-weight:700;margin:0 0 8px">🏆 Affichez le champion dans votre bar !</p>
+    <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:0">
+      L'équipe <strong style="color:#fff">${winner.pseudo ?? winnerUUID}</strong> a dominé ce mois —
+      connectez-vous à votre dashboard KLINK pour télécharger l'affiche du gagnant et l'imprimer.
+    </p>
+  </div>
+  <p style="color:rgba(255,255,255,0.25);font-size:11px;text-align:center">
+    KLINK · Bar ${barId} · Ce classement se remet à zéro automatiquement chaque 1er du mois
+  </p>
+</body></html>`;
+
+  try {
+    await mailer.sendMail({
+      from:    `"KLINK Bar" <${process.env.GMAIL_USER}>`,
+      to:      email,
+      subject: `👑 Classement du mois ${month} — ${winner.pseudo ?? 'Votre champion'} domine !`,
+      html,
+      attachments: [{
+        filename:    'klink-logo.svg',
+        content:     LOGO_SVG_BUFFER,
+        cid:         'klink-logo@klink',
+        contentType: 'image/svg+xml',
+      }],
+    });
+    console.log(`[KLINK] 📧 Rapport mensuel envoyé à ${email} pour "${barId}"`);
+  } catch (err) {
+    console.error(`[KLINK] ❌ Erreur email mensuel (${barId}) :`, err.message);
+  }
+}
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Avatar from '../components/Avatar';
 import ContactModal from '../components/QRModal';
 import KlinkLogo from '../components/KlinkLogo';
@@ -45,21 +45,63 @@ function LightningScore({ wins }) {
   );
 }
 
+/** Calcule le temps restant jusqu'au prochain reset horaire (heure pile) */
+function useRoundCountdown(roundReset) {
+  const [timeLeft, setTimeLeft] = useState('');
+  const [showFlash, setShowFlash] = useState(false);
+  const prevReset = useRef(roundReset);
+
+  useEffect(() => {
+    if (roundReset !== prevReset.current) {
+      prevReset.current = roundReset;
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 3500);
+    }
+  }, [roundReset]);
+
+  useEffect(() => {
+    function update() {
+      const now     = new Date();
+      const nextHr  = new Date(now);
+      nextHr.setHours(nextHr.getHours() + 1, 0, 0, 0);
+      const diff    = Math.max(0, nextHr - now);
+      const m       = Math.floor(diff / 60000);
+      const s       = Math.floor((diff % 60000) / 1000);
+      setTimeLeft(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return { timeLeft, showFlash };
+}
+
 export default function TablesPage({
-  user, tables, scores, leaderboardMessage, tableId, barId,
+  user, tables, scores, leaderboard, roundReset, leaderboardMessage, tableId, barId,
   connected,
   onInvite,
   inviteResponse,
   announcement, onDismissAnnouncement,
   senderNotif,
 }) {
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR]           = useState(false);
+  const [lbTab, setLbTab]             = useState('round'); // 'round' | 'evening' | 'month'
+  const { timeLeft, showFlash }       = useRoundCountdown(roundReset);
+
+  // Classements triés (top 5)
+  const lb = leaderboard ?? { hourly: {}, evening: {}, monthly: {} };
+  const toTop5 = (obj) => Object.entries(obj || {}).sort(([, a], [, b]) => b.wins - a.wins).slice(0, 5);
+  const topRound   = toTop5(lb.hourly);
+  const topEvening = toTop5(lb.evening);
+  const topMonth   = toTop5(lb.monthly);
+
   // scores = { [uuid]: { wins, pseudo, photo, tableId, connected } }
   const topScores = Object.entries(scores)
     .sort(([, a], [, b]) => b.wins - a.wins)
     .slice(0, 5);
 
-  const hasLeaderboard = topScores.length > 0;
+  const hasLeaderboard = topScores.length > 0 || topRound.length > 0 || topEvening.length > 0 || topMonth.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
@@ -182,6 +224,7 @@ export default function TablesPage({
             borderTop:      '1px solid rgba(0,255,135,0.14)',
           }}
         >
+          {/* Message gérant — inchangé, au-dessus des onglets */}
           {leaderboardMessage && (
             <p style={{
               background:           'linear-gradient(135deg, #00FF87, #00D4FF)',
@@ -200,22 +243,47 @@ export default function TablesPage({
             </p>
           )}
 
-          <div className="flex items-center justify-between px-4 pt-3 pb-2">
-            <span
-              className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5"
-              style={{ color: '#00FF87' }}
+          {/* Animation "Nouveau round !" */}
+          {showFlash && (
+            <div
+              className="mx-4 mt-3 py-2 rounded-xl text-center text-sm font-black"
+              style={{
+                background:  'linear-gradient(135deg, rgba(0,255,135,0.18), rgba(0,212,255,0.18))',
+                border:      '1px solid rgba(0,255,135,0.45)',
+                color:       '#00FF87',
+                boxShadow:   '0 0 14px rgba(0,255,135,0.25)',
+                animation:   'neon-pulse 1s ease-in-out 3',
+              }}
             >
-              <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
-                <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
-              </svg>
-              CLASSEMENT PARIS
-            </span>
-            <span
-              className="text-xs font-bold px-2 py-0.5 rounded-full"
-              style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.10)', border: '1px solid rgba(0,212,255,0.22)' }}
-            >
-              En direct
-            </span>
+              ⚡ Nouveau round !
+            </div>
+          )}
+
+          {/* 3 onglets */}
+          <div className="flex gap-2 px-4 pt-3 pb-2">
+            {[
+              { key: 'round',   label: '⚡ Ce round' },
+              { key: 'evening', label: '🌙 Ce soir' },
+              { key: 'month',   label: '👑 Ce mois' },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setLbTab(key)}
+                className="flex-1 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95"
+                style={lbTab === key ? {
+                  background: 'linear-gradient(135deg, #00FF87, #00D4FF)',
+                  color:      '#0A1628',
+                  boxShadow:  '0 0 10px rgba(0,255,135,0.35)',
+                  border:     '1px solid rgba(0,255,135,0.5)',
+                } : {
+                  background: 'rgba(255,255,255,0.6)',
+                  color:      '#0A1628',
+                  border:     '1px solid rgba(0,212,255,0.2)',
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           <div style={{
@@ -224,33 +292,104 @@ export default function TablesPage({
             margin:     '0 16px',
           }} />
 
-          <div className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 scrollbar-none">
-            {topScores.map(([uuid, { wins, pseudo, photo, connected }], i) => (
-              <div
-                key={uuid}
-                className="flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl"
-                style={{
-                  background: cardBg(i),
-                  border:     cardBorder(i),
-                  minWidth:   '72px',
-                  boxShadow:  i === 0 ? '0 0 12px rgba(255,215,0,0.18)' :
-                              i === 1 ? '0 0 10px rgba(0,212,255,0.15)' :
-                              i === 2 ? '0 0 10px rgba(0,255,135,0.12)' : 'none',
-                  opacity:    connected === false ? 0.42 : 1,
-                  transition: 'opacity 0.4s',
-                }}
-              >
-                <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
-                <Avatar pseudo={pseudo ?? uuid} photo={photo ?? null} size={36} />
-                <span
-                  className="text-xs font-bold truncate max-w-[64px] text-center"
-                  style={{ color: connected === false ? 'rgba(74,111,165,0.50)' : pseudoColor(i) }}
-                >
-                  {pseudo ?? uuid}
-                </span>
-                <LightningScore wins={wins} />
+          {/* Compte à rebours round */}
+          {lbTab === 'round' && (
+            <div className="flex items-center justify-between px-4 pt-2 pb-1">
+              <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: '#00FF87' }}>
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+                  <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
+                </svg>
+                CLASSEMENT PARIS
+              </span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full tabular-nums"
+                style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.10)', border: '1px solid rgba(0,212,255,0.22)' }}>
+                Nouveau round dans {timeLeft}
+              </span>
+            </div>
+          )}
+
+          {/* Badge soirée */}
+          {lbTab === 'evening' && (
+            <div className="flex items-center justify-between px-4 pt-2 pb-1">
+              <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: '#00FF87' }}>
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+                  <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
+                </svg>
+                CLASSEMENT PARIS
+              </span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.10)', border: '1px solid rgba(0,212,255,0.22)' }}>
+                En direct
+              </span>
+            </div>
+          )}
+
+          {/* Badge mois */}
+          {lbTab === 'month' && (
+            <div className="flex items-center justify-between px-4 pt-2 pb-1">
+              <span className="text-xs font-black uppercase tracking-widest flex items-center gap-1.5" style={{ color: '#00FF87' }}>
+                <svg width="8" height="12" viewBox="0 0 8 12" fill="none">
+                  <path d="M5 0L0 7H3.5L1.5 12L8 5H4Z" fill="#00FF87" />
+                </svg>
+                CLASSEMENT PARIS
+              </span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                style={{ color: '#00D4FF', background: 'rgba(0,212,255,0.10)', border: '1px solid rgba(0,212,255,0.22)' }}>
+                En direct
+              </span>
+            </div>
+          )}
+
+          {/* Cards du classement */}
+          <div className="flex gap-3 overflow-x-auto px-4 pb-4 pt-1 scrollbar-none">
+            {(lbTab === 'round' ? topRound : lbTab === 'evening' ? topEvening : topMonth).map(
+              ([uuid, entry], i) => {
+                const { wins, pseudo, photo, connected: conn } = entry;
+                const isFirst = i === 0;
+                const badge = lbTab === 'evening' && isFirst
+                  ? '🌙 Leader de la soirée'
+                  : lbTab === 'month' && isFirst
+                  ? '👑 Légende du mois'
+                  : null;
+                return (
+                  <div key={uuid} className="flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl"
+                    style={{
+                      background: cardBg(i),
+                      border:     cardBorder(i),
+                      minWidth:   '72px',
+                      boxShadow:  i === 0 ? '0 0 12px rgba(255,215,0,0.18)' :
+                                  i === 1 ? '0 0 10px rgba(0,212,255,0.15)' :
+                                  i === 2 ? '0 0 10px rgba(0,255,135,0.12)' : 'none',
+                      opacity:    conn === false ? 0.42 : 1,
+                      transition: 'opacity 0.4s',
+                    }}
+                  >
+                    {badge && (
+                      <span className="text-center leading-tight font-black"
+                        style={{ fontSize: '9px', color: i === 0 ? '#FFD700' : '#00FF87', maxWidth: '64px' }}>
+                        {badge}
+                      </span>
+                    )}
+                    <span className="text-base leading-none">{MEDAL[i] ?? `#${i + 1}`}</span>
+                    <Avatar pseudo={pseudo ?? uuid} photo={photo ?? null} size={36} />
+                    <span className="text-xs font-bold truncate max-w-[64px] text-center"
+                      style={{ color: conn === false ? 'rgba(74,111,165,0.50)' : pseudoColor(i) }}>
+                      {pseudo ?? uuid}
+                    </span>
+                    <LightningScore wins={wins} />
+                  </div>
+                );
+              }
+            )}
+            {(lbTab === 'round' ? topRound : lbTab === 'evening' ? topEvening : topMonth).length === 0 && (
+              <div className="flex-1 py-4 text-center">
+                <p className="text-xs" style={{ color: 'rgba(74,111,165,0.60)' }}>
+                  {lbTab === 'round' ? 'Aucun pari ce round encore' :
+                   lbTab === 'evening' ? 'Aucun pari ce soir encore' :
+                   'Aucun pari ce mois encore'}
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
