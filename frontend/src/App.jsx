@@ -50,10 +50,14 @@ export default function App() {
   const [connected, setConnected]                   = useState(false);
   const [senderNotif, setSenderNotif]               = useState(null); // { type: 'queued'|'busy', pseudo }
   const [joinError, setJoinError]                   = useState(null);
+  const [joinRetryIn, setJoinRetryIn]               = useState(null);  // null | 2 | 1
+  const [betCancelled, setBetCancelled]             = useState(null);  // message annulation
 
   // Refs stables — jamais recréés, lisibles depuis n'importe quel handler socket
-  const userRef    = useRef(null);   // { pseudo, photo } de l'utilisateur courant
-  const hasJoined  = useRef(false);  // true après le premier join (pour re-join sur reconnexion)
+  const userRef         = useRef(null);   // { pseudo, photo } de l'utilisateur courant
+  const hasJoined       = useRef(false);  // true après le premier join (pour re-join sur reconnexion)
+  const joinRetryCredsRef = useRef(null); // { pseudo, photo } sauvegardés pour auto-retry
+  const joinRetryTimerRef = useRef(null); // handle du setInterval de compte à rebours
   // On stocke barId/tableId dans des refs pour que les handlers socket (fermés sur [])
   // lisent toujours les valeurs courantes sans être des dépendances du useEffect.
   const barIdRef   = useRef(barId);
@@ -82,6 +86,11 @@ export default function App() {
       setLeaderboardMessage(message);
     };
     const onInviteReceive = (invite) => {
+      // Accuser réception immédiatement pour annuler le timer de re-tentative serveur
+      socket.emit('invite:ack', {
+        barId:       barIdRef.current,
+        fromTableId: invite.fromTableId,
+      });
       setPendingInvite(invite);
     };
     const onInviteResponse = ({ responderPseudo, accepted }) => {
@@ -107,12 +116,67 @@ export default function App() {
       setCelebration({ isTie: true, ...tieData });
     };
 
+    // Bug 5 — Scores restaurés : mettre à jour le leaderboard immédiatement
+    const onScoresRestored = (lb) => {
+      setLeaderboard(lb);
+      console.log('[socket] scores:restored — classements rechargés');
+    };
+
+    // Bug 2 — Pari annulé : libérer l'interface et afficher le message
+    const onBetCancelled = ({ message }) => {
+      setBetPending(null);
+      setCelebration(null);
+      setMyStatus(null);
+      setBetCancelled(message || 'Pari annulé — pas de réponse');
+      setTimeout(() => setBetCancelled(null), 5_000);
+      console.log('[socket] bet:cancelled :', message);
+    };
+
+    // Bug 6 — join:error : auto-retry 2s pour les erreurs non-bloquantes
     const onJoinError = ({ message }) => {
+      const isNameConflict = typeof message === 'string' && message.includes('Ce nom est déjà pris');
+
       setScreen('join');
       hasJoined.current = false;
-      userRef.current   = null;
       socket.disconnect();
       setJoinError(message);
+
+      // Arrêter tout retry en cours
+      if (joinRetryTimerRef.current) {
+        clearInterval(joinRetryTimerRef.current);
+        joinRetryTimerRef.current = null;
+      }
+
+      if (!isNameConflict && joinRetryCredsRef.current) {
+        // Erreur transitoire → réessayer automatiquement dans 2s
+        setJoinRetryIn(2);
+        const creds = joinRetryCredsRef.current;
+        joinRetryTimerRef.current = setInterval(() => {
+          setJoinRetryIn((prev) => {
+            if (prev === null) return null;
+            if (prev <= 1) {
+              clearInterval(joinRetryTimerRef.current);
+              joinRetryTimerRef.current = null;
+              // Réinitialiser et relancer la connexion
+              userRef.current   = creds;
+              hasJoined.current = true;
+              setJoinError(null);
+              setJoinRetryIn(null);
+              getOrCreateTableUUID(barIdRef.current, tableIdRef.current);
+              setUser({ pseudo: creds.pseudo, photo: creds.photo, tableId: tableIdRef.current, barId: barIdRef.current });
+              socket.connect();
+              setScreen('tables');
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1_000);
+      } else {
+        // Conflit de nom ou pas de creds → laisser l'utilisateur choisir
+        userRef.current = null;
+        joinRetryCredsRef.current = null;
+        setJoinRetryIn(null);
+      }
     };
 
     const onInviteQueued = ({ targetPseudo }) => {
@@ -161,10 +225,13 @@ export default function App() {
     socket.on('invite:queued',           onInviteQueued);
     socket.on('invite:busy',             onInviteBusy);
     socket.on('join:error',              onJoinError);
+    socket.on('scores:restored',         onScoresRestored);
+    socket.on('bet:cancelled',           onBetCancelled);
 
     return () => {
       // Retire exactement les handlers de cette instance (safe en StrictMode).
       // socket.disconnect() ici = démontage réel → la table quitte proprement.
+      if (joinRetryTimerRef.current) clearInterval(joinRetryTimerRef.current);
       socket.off('connect',                 onConnect);
       socket.off('disconnect',              onDisconnect);
       socket.off('tables:updated',          onTablesUpdated);
@@ -181,6 +248,8 @@ export default function App() {
       socket.off('invite:queued',           onInviteQueued);
       socket.off('invite:busy',             onInviteBusy);
       socket.off('join:error',              onJoinError);
+      socket.off('scores:restored',         onScoresRestored);
+      socket.off('bet:cancelled',           onBetCancelled);
       socket.disconnect();
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -189,6 +258,13 @@ export default function App() {
     initAudio(); // déverrouille AudioContext pendant le geste utilisateur
 
     setJoinError(null);
+    setJoinRetryIn(null);
+    if (joinRetryTimerRef.current) {
+      clearInterval(joinRetryTimerRef.current);
+      joinRetryTimerRef.current = null;
+    }
+    // Sauvegarder les creds pour l'auto-retry en cas de join:error transitoire
+    joinRetryCredsRef.current = { pseudo, photo };
     userRef.current  = { pseudo, photo };
     // On marque hasJoined = true AVANT connect() pour que onConnect()
     // envoie le 'join' dès que la connexion est établie.
@@ -281,7 +357,7 @@ export default function App() {
   }, [betPending]);
 
   if (screen === 'join') {
-    return <JoinPage tableId={tableId} onJoin={handleJoin} joinError={joinError} />;
+    return <JoinPage tableId={tableId} onJoin={handleJoin} joinError={joinError} joinRetryIn={joinRetryIn} />;
   }
 
   return (
@@ -341,6 +417,22 @@ export default function App() {
           contact={receivedContact}
           onDismiss={() => setReceivedContact(null)}
         />
+      )}
+
+      {/* Bannière annulation de pari */}
+      {betCancelled && (
+        <div
+          style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            background: 'rgba(255,100,60,0.95)', color: '#fff',
+            padding: '12px 24px', borderRadius: 16, fontWeight: 700,
+            fontSize: 14, zIndex: 9999, textAlign: 'center',
+            boxShadow: '0 4px 24px rgba(255,60,0,0.35)',
+            maxWidth: 'calc(100vw - 48px)',
+          }}
+        >
+          {betCancelled}
+        </div>
       )}
     </>
   );

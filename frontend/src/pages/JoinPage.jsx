@@ -13,7 +13,7 @@ const CameraIcon = ({ size, color }) => (
   </svg>
 );
 
-export default function JoinPage({ tableId, onJoin, joinError }) {
+export default function JoinPage({ tableId, onJoin, joinError, joinRetryIn }) {
   const [pseudo, setPseudo]         = useState('');
   const [photo, setPhoto]           = useState(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -98,6 +98,11 @@ export default function JoinPage({ tableId, onJoin, joinError }) {
               }}
             >
               {joinError}
+              {joinRetryIn !== null && (
+                <span style={{ display: 'block', marginTop: 4, opacity: 0.7, fontWeight: 500 }}>
+                  Nouvelle tentative dans {joinRetryIn}s…
+                </span>
+              )}
             </div>
           )}
 

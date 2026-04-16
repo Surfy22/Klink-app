@@ -98,6 +98,13 @@ function isValidPhoto(v) {
 const _rates = new Map();
 
 /**
+ * Map des livraisons d'invitation en attente d'accusé de réception.
+ * Clé : `${barId}:${toTableId}:${fromTableId}`
+ * Valeur : handle du setTimeout de re-tentative
+ */
+const pendingDeliveries = new Map();
+
+/**
  * Retourne true si la socket dépasse la limite.
  * @param {string} sid    Socket ID
  * @param {string} event  Nom de l'événement
@@ -114,6 +121,92 @@ function isRateLimited(sid, event, limit, windowMs) {
   e.count++;
   _rates.set(key, e);
   return e.count > limit;
+}
+
+/**
+ * Livre une invitation à une table avec accusé de réception + re-tentatives.
+ * Si la table ne renvoie pas `invite:ack` dans 3 s, re-tente jusqu'à 3 fois
+ * en relisant le socketId courant (résiste aux reconnexions).
+ *
+ * @param {string} barId
+ * @param {string} toTableId
+ * @param {object} inviteData  { fromTableId, fromPseudo, fromPhoto, message }
+ * @param {number} [attempt=1] numéro de tentative (1-3)
+ */
+function deliverInvite(barId, toTableId, inviteData, attempt = 1) {
+  const key = `${barId}:${toTableId}:${inviteData.fromTableId}`;
+
+  // Annule toute re-tentative en cours pour ce slot
+  if (pendingDeliveries.has(key)) {
+    clearTimeout(pendingDeliveries.get(key));
+    pendingDeliveries.delete(key);
+  }
+
+  const bar = bars[barId];
+  if (!bar) return;
+
+  const target = bar.tables[toTableId];
+  if (!target) {
+    // Table disparue — vider la file pour éviter une livraison fantôme
+    delete bar.inviteQueues[toTableId];
+    return;
+  }
+
+  // Vérifie que l'invitation est toujours la première de la file
+  const queue = bar.inviteQueues[toTableId];
+  if (!queue || queue[0]?.fromTableId !== inviteData.fromTableId) return;
+
+  _io.to(target.socketId).emit('invite:receive', inviteData);
+  console.log(`[${barId}] invite:receive → "${toTableId}" (tentative ${attempt}/3, socket=${target.socketId})`);
+
+  if (attempt < 3) {
+    const timer = setTimeout(() => {
+      pendingDeliveries.delete(key);
+      // Si le destinataire n'a pas acquitté et que l'invite est toujours en tête
+      const curBar   = bars[barId];
+      const curQueue = curBar?.inviteQueues[toTableId];
+      if (curQueue && curQueue[0]?.fromTableId === inviteData.fromTableId) {
+        console.warn(`[${barId}] invite:ack absent de "${toTableId}" — re-tentative ${attempt + 1}/3`);
+        deliverInvite(barId, toTableId, inviteData, attempt + 1);
+      }
+    }, 3_000);
+    pendingDeliveries.set(key, timer);
+  }
+}
+
+/**
+ * Annule un pari actif et notifie les deux tables.
+ * Libère le statut "En jeu" immédiatement.
+ */
+function cancelBet(barId, betId) {
+  const bar = bars[barId];
+  if (!bar) return;
+
+  const activeBet = bar.activeBets?.[betId];
+  if (!activeBet) return;
+
+  clearTimeout(activeBet.cancelTimer);
+  delete bar.activeBets[betId];
+
+  // Marque le pari comme résolu (annulé) pour éviter tout vote tardif
+  bar.resolvedBets.set(betId, Date.now());
+  delete bar.pendingVotes[betId];
+  if (bar.stats.betsInProgress > 0) bar.stats.betsInProgress--;
+
+  const t1 = bar.tables[activeBet.table1Id];
+  const t2 = bar.tables[activeBet.table2Id];
+  if (t1?.status === 'En jeu') t1.status = null;
+  if (t2?.status === 'En jeu') t2.status = null;
+
+  const cancelEvent = { betId, message: 'Pari annulé — pas de réponse' };
+  if (t1) _io.to(t1.socketId).emit('bet:cancelled', cancelEvent);
+  if (t2) _io.to(t2.socketId).emit('bet:cancelled', cancelEvent);
+
+  if (_io) {
+    _io.to(barId).emit('tables:updated', getActiveTables(barId));
+    notifyAdmins(_io, barId);
+  }
+  console.log(`[${barId}] Pari ${betId} annulé automatiquement (timeout 5 min)`);
 }
 
 /** Purge les entrées rate-limit liées à une socket à sa déconnexion */
@@ -193,6 +286,7 @@ function getBar(barId) {
       hourlyScores:       {},
       resolvedBets:       new Map(),
       pendingVotes:       {},         // { [betId]: { voterTableId, winnerTableId, winnerPseudo, winnerPhoto } }
+      activeBets:         {},         // { [betId]: { table1Id, table2Id, cancelTimer } }
       inviteQueues:       {},         // { [toTableId]: [{ fromTableId, fromPseudo, fromPhoto, message }, ...] }
       reservedNames:      {},         // { [pseudoNormalisé]: tableId } — réservés jusqu'au reset
       adminSockets:       new Set(),
@@ -272,11 +366,19 @@ function resetBar(barId) {
   });
   if (history[barId].length > 30) history[barId].shift();
 
+  // Annuler tous les timers de paris actifs avant le reset
+  if (bar.activeBets) {
+    for (const { cancelTimer } of Object.values(bar.activeBets)) {
+      clearTimeout(cancelTimer);
+    }
+  }
+
   bar.stats          = { invitesSent: 0, betsInProgress: 0 };
   bar.scores         = {};
   bar.hourlyScores   = {};
   bar.resolvedBets   = new Map();
   bar.pendingVotes   = {};
+  bar.activeBets     = {};
   bar.inviteQueues   = {};
   bar.reservedNames  = {};
 
@@ -450,7 +552,8 @@ module.exports = (io) => {
         };
 
         // Reconnexion : restaure le score (marque connected:true, met à jour pseudo/photo)
-        if (bar.scores[validUUID]) {
+        const isReturningPlayer = !!bar.scores[validUUID];
+        if (isReturningPlayer) {
           bar.scores[validUUID].connected = true;
           bar.scores[validUUID].pseudo    = pseudo.trim();
           if (photo) bar.scores[validUUID].photo = photo;
@@ -467,7 +570,8 @@ module.exports = (io) => {
         // Si une invitation était en attente lors de la déconnexion, la re-livrer
         const reconnectQueue = bar.inviteQueues[tableId];
         if (reconnectQueue && reconnectQueue.length > 0) {
-          socket.emit('invite:receive', reconnectQueue[0]);
+          // Mise à jour du socketId dans bar.tables avant deliverInvite
+          deliverInvite(barId, tableId, reconnectQueue[0]);
         }
 
         if (bar.leaderboardMessage) {
@@ -475,7 +579,14 @@ module.exports = (io) => {
         }
 
         // Envoie les 3 classements à la table qui rejoint
-        socket.emit('leaderboard:updated', getAllLeaderboards(barId));
+        const allLb = getAllLeaderboards(barId);
+        socket.emit('leaderboard:updated', allLb);
+
+        // Bug 5 — Score restauré : notifie la table avec ses points via un événement dédié
+        if (isReturningPlayer) {
+          socket.emit('scores:restored', allLb);
+          console.log(`[${barId}] scores:restored envoyé à "${tableId}" (uuid=${validUUID})`);
+        }
 
         notifyAdmins(io, barId);
         console.log(`[${barId}] Table ${tableId} rejoint : "${pseudo}"`);
@@ -533,9 +644,9 @@ module.exports = (io) => {
         recordInviteSent(barId, message);
 
         if (!bar.inviteQueues[toTableId] || bar.inviteQueues[toTableId].length === 0) {
-          // Aucune invitation en cours → livraison immédiate
+          // Aucune invitation en cours → livraison immédiate avec ack/retry
           bar.inviteQueues[toTableId] = [inviteData];
-          io.to(target.socketId).emit('invite:receive', inviteData);
+          deliverInvite(barId, toTableId, inviteData);
           console.log(`[${barId}] invite:send — livraison immédiate à table "${toTableId}"`);
         } else {
           // Invitation déjà en cours → mise en file d'attente
@@ -550,6 +661,22 @@ module.exports = (io) => {
         notifyAdmins(io, barId);
       } catch (err) {
         console.error('[invite:send] erreur :', err.message);
+      }
+    });
+
+    // Accusé de réception d'une invitation — annule le timer de re-tentative
+    socket.on('invite:ack', (payload) => {
+      try {
+        const { barId, fromTableId } = payload ?? {};
+        if (barId !== currentBarId || !isStr(fromTableId, 50)) return;
+        const key = `${barId}:${currentTableId}:${fromTableId}`;
+        if (pendingDeliveries.has(key)) {
+          clearTimeout(pendingDeliveries.get(key));
+          pendingDeliveries.delete(key);
+          console.log(`[${barId}] invite:ack — "${currentTableId}" a bien reçu l'invitation de "${fromTableId}"`);
+        }
+      } catch (err) {
+        console.error('[invite:ack] erreur :', err.message);
       }
     });
 
@@ -605,6 +732,12 @@ module.exports = (io) => {
           if (sender)    io.to(sender.socketId).emit('invite:accepted', celebration);
           if (responder) io.to(responder.socketId).emit('invite:accepted', celebration);
 
+          // Bug 2 — Enregistrer le pari actif avec timer d'annulation (5 min)
+          if (isBet) {
+            const cancelTimer = setTimeout(() => cancelBet(barId, betId), 5 * 60 * 1000);
+            bar.activeBets[betId] = { table1Id: fromTableId, table2Id: toTableId, cancelTimer };
+          }
+
           // Annuler les invitations en file d'attente pour les autres expéditeurs
           const queueOnAccept = bar.inviteQueues[toTableId];
           if (queueOnAccept) {
@@ -637,12 +770,9 @@ module.exports = (io) => {
           if (queueOnDecline) {
             queueOnDecline.shift();
             if (queueOnDecline.length > 0) {
-              const next        = queueOnDecline[0];
-              const targetTable = bar.tables[toTableId];
-              if (targetTable) {
-                io.to(targetTable.socketId).emit('invite:receive', next);
-                console.log(`[${barId}] File d'attente — livraison de la prochaine invitation à "${toTableId}"`);
-              }
+              const next = queueOnDecline[0];
+              deliverInvite(barId, toTableId, next);
+              console.log(`[${barId}] File d'attente — livraison de la prochaine invitation à "${toTableId}"`);
             } else {
               delete bar.inviteQueues[toTableId];
             }
@@ -696,43 +826,67 @@ module.exports = (io) => {
         if (bar.stats.betsInProgress > 0) bar.stats.betsInProgress--;
         if (bar.resolvedBets.size > 500) pruneResolvedBets(bar);
 
+        // Bug 2 — Annuler le timer d'annulation automatique (pari résolu normalement)
+        if (bar.activeBets?.[betId]) {
+          clearTimeout(bar.activeBets[betId].cancelTimer);
+          delete bar.activeBets[betId];
+        }
+
         if (firstVote.winnerTableId === winnerTableId) {
           // ── Accord — résolution normale ──────────────────────────────────────
           const winnerTable = bar.tables[winnerTableId];
           const uuid = winnerTable?.tableUUID || winnerTableId;
 
-          if (!bar.scores[uuid]) {
-            bar.scores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: null, connected: true };
-          }
-          bar.scores[uuid].wins++;
-          bar.scores[uuid].pseudo    = winnerPseudo;
-          bar.scores[uuid].tableId   = winnerTableId;
-          bar.scores[uuid].connected = true;
-
-          // Priorité : photo stockée côté serveur au moment du join (plus fiable).
           const storedPhoto  = winnerTable?.photo ?? null;
           const photoToStore = storedPhoto !== null ? storedPhoto
             : (isValidPhoto(winnerPhoto) && winnerPhoto != null ? winnerPhoto : null);
-          bar.scores[uuid].photo = photoToStore;
-          console.log(`[${barId}] Photo classement "${winnerPseudo}" (uuid=${uuid}) : ${photoToStore ? 'présente' : 'absente'} (source=${storedPhoto !== null ? 'serveur' : 'client'})`);
 
-          // ── Classement horaire (round) ──────────────────────────────────────
+          // Bug 3 — Attribution atomique des 3 classements avec rollback complet
+          // Initialiser les entrées manquantes avant d'incrémenter
+          if (!bar.scores[uuid]) {
+            bar.scores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: null, connected: true };
+          }
           if (!bar.hourlyScores[uuid]) {
             bar.hourlyScores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
           }
-          bar.hourlyScores[uuid].wins++;
-          bar.hourlyScores[uuid].pseudo = winnerPseudo;
-          bar.hourlyScores[uuid].photo  = photoToStore;
-
-          // ── Classement mensuel (JSON persistant) ────────────────────────────
           const monthly = loadMonthlyScores(barId);
           if (!monthly[uuid]) {
             monthly[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
           }
+
+          // Incrémenter les 3 classements
+          bar.scores[uuid].wins++;
+          bar.scores[uuid].pseudo    = winnerPseudo;
+          bar.scores[uuid].tableId   = winnerTableId;
+          bar.scores[uuid].connected = true;
+          bar.scores[uuid].photo     = photoToStore;
+
+          bar.hourlyScores[uuid].wins++;
+          bar.hourlyScores[uuid].pseudo = winnerPseudo;
+          bar.hourlyScores[uuid].photo  = photoToStore;
+
           monthly[uuid].wins++;
           monthly[uuid].pseudo = winnerPseudo;
           monthly[uuid].photo  = photoToStore;
-          saveMonthlyScores(barId);
+
+          // Persister — si ça échoue, rollback des 3 classements simultanément
+          try {
+            saveMonthlyScores(barId);
+          } catch (saveErr) {
+            console.error(`[${barId}] Erreur sauvegarde mensuelle — rollback attribution :`, saveErr.message);
+            bar.scores[uuid].wins--;
+            bar.hourlyScores[uuid].wins--;
+            monthly[uuid].wins--;
+            // Remettre betsInProgress car le pari n'est pas réellement résolu
+            bar.stats.betsInProgress++;
+            bar.resolvedBets.delete(betId);
+            // Remettre le vote pour permettre une nouvelle tentative
+            bar.pendingVotes[betId] = firstVote;
+            console.error(`[${barId}] Rollback effectué — pari ${betId} retenté possible`);
+            return; // ne pas émettre de mise à jour partielle
+          }
+
+          console.log(`[${barId}] Attribution atomique OK — "${winnerPseudo}" (uuid=${uuid}) — photo: ${photoToStore ? 'présente' : 'absente'}`);
 
           // Libérer le statut "En jeu" des deux tables
           const t1accord = firstVote.voterTableId;
@@ -965,7 +1119,8 @@ module.exports = (io) => {
         if (!isAdmin && currentTableId) {
           const entry = bar.tables[currentTableId];
           if (entry && entry.socketId === socket.id) {
-            // Délai de grâce 8 s : absorbe les micro-coupures et l'upgrade polling→WS.
+            // Bug 4 — Délai de grâce 5 s : absorbe les micro-coupures et l'upgrade polling→WS.
+            // Réduit de 8s à 5s pour supprimer les tables plus rapidement.
             // Si la table renvoie 'join' avant l'expiration, le timer est annulé.
             entry.disconnectTimer = setTimeout(() => {
               const cur = bar.tables[currentTableId];
@@ -996,14 +1151,15 @@ module.exports = (io) => {
                   bar.scores[removedUUID].connected = false;
                 }
                 delete bar.tables[currentTableId];
+                // Émettre tables:updated à TOUTE la room après suppression définitive
                 io.to(currentBarId).emit('tables:updated', getActiveTables(currentBarId));
                 io.to(currentBarId).emit('scores:updated', bar.scores);
                 notifyAdmins(io, currentBarId);
-                console.log(`[${currentBarId}] Table ${currentTableId} retirée après délai de grâce (socket=${socket.id})`);
+                console.log(`[${currentBarId}] Table ${currentTableId} retirée après délai de grâce 5s (socket=${socket.id})`);
                 maybeCleanBar(currentBarId);
               }
-            }, 8000);
-            console.log(`[${currentBarId}] Table ${currentTableId} — délai de grâce 8 s (socket=${socket.id})`);
+            }, 5_000);
+            console.log(`[${currentBarId}] Table ${currentTableId} — délai de grâce 5 s (socket=${socket.id})`);
           } else if (entry) {
             // Socket obsolète — la table a déjà été ré-enregistrée par un nouveau socket
             console.log(`[${currentBarId}] Socket obsolète ${socket.id} pour table ${currentTableId} — table conservée (socket actif=${entry.socketId})`);
