@@ -22,6 +22,10 @@ export default function AdminPage() {
   const [testReportError, setTestReportError] = useState('');
   const [monthlyWinner, setMonthlyWinner]     = useState(null);   // { wins, pseudo, photo, tableId } | null
   const [monthlyLb, setMonthlyLb]             = useState({});
+  const [roundDuration, setRoundDuration]     = useState(60);
+  const [roundDurationSaved, setRoundDurationSaved] = useState(false);
+  const [resetHourlyState, setResetHourlyState] = useState('idle'); // 'idle' | 'confirming' | 'done'
+  const [resetAllState, setResetAllState]     = useState('idle');
 
   useEffect(() => {
     adminSocket.connect();
@@ -35,6 +39,7 @@ export default function AdminPage() {
       setDashboard(data);
       if (data.leaderboardMessage !== undefined) setLeaderMsg(data.leaderboardMessage);
       if (data.adminEmail) setAdminEmail(data.adminEmail);
+      if (data.roundDurationMinutes !== undefined) setRoundDuration(data.roundDurationMinutes);
     });
 
     adminSocket.on('admin:emailSaved', ({ email }) => {
@@ -54,6 +59,17 @@ export default function AdminPage() {
       setTimeout(() => setTestReportState('idle'), 4000);
     });
 
+    adminSocket.on('admin:resetDone', ({ type }) => {
+      if (type === 'hourly') { setResetHourlyState('done'); setTimeout(() => setResetHourlyState('idle'), 2500); }
+      else if (type === 'all') { setResetAllState('done'); setTimeout(() => setResetAllState('idle'), 2500); }
+    });
+
+    adminSocket.on('admin:roundDurationSaved', ({ minutes }) => {
+      setRoundDuration(minutes);
+      setRoundDurationSaved(true);
+      setTimeout(() => setRoundDurationSaved(false), 2500);
+    });
+
     adminSocket.on('admin:history', (data) => {
       setHistoryData([...data].reverse()); // plus récent en premier
     });
@@ -71,6 +87,8 @@ export default function AdminPage() {
       adminSocket.off('admin:emailSaved');
       adminSocket.off('admin:testReportResult');
       adminSocket.off('admin:monthlyWinner');
+      adminSocket.off('admin:resetDone');
+      adminSocket.off('admin:roundDurationSaved');
       adminSocket.disconnect();
     };
   }, [barId, password]);
@@ -369,6 +387,127 @@ export default function AdminPage() {
                   <p className="text-white/40 text-sm">Cliquez "Actualiser" pour charger le classement du mois</p>
                 </div>
               )}
+            </div>
+
+            {/* Contrôles avancés */}
+            <div>
+              <h2 className="text-white font-black text-base mb-1">Contrôles avancés</h2>
+              <p className="text-white/35 text-xs mb-3">
+                Actions immédiates sur les classements — irréversibles
+              </p>
+              <div className="glass-card rounded-2xl p-4 space-y-4">
+
+                {/* Reset horaire */}
+                {resetHourlyState !== 'confirming' ? (
+                  <button
+                    onClick={() => setResetHourlyState('confirming')}
+                    className="w-full py-3 rounded-xl font-black text-sm transition-all active:scale-95"
+                    style={{
+                      background: resetHourlyState === 'done' ? 'rgba(0,255,135,0.10)' : 'rgba(255,80,80,0.08)',
+                      color:      resetHourlyState === 'done' ? '#00FF87' : '#FF5050',
+                      border:     resetHourlyState === 'done' ? '1px solid rgba(0,255,135,0.30)' : '1px solid rgba(255,80,80,0.25)',
+                    }}
+                  >
+                    {resetHourlyState === 'done' ? '✅ Round remis à zéro !' : '⚡ Reset le classement horaire'}
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-center" style={{ color: '#FF5050' }}>
+                      Êtes-vous sûr ? Cette action est irréversible.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setResetHourlyState('idle')}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+                        style={{ background: 'rgba(10,22,40,0.06)', color: '#4A6FA5', border: '1px solid rgba(0,212,255,0.15)' }}
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={() => { adminSocket.emit('admin:resetHourly', { barId }); setResetHourlyState('idle'); }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95"
+                        style={{ background: 'rgba(255,80,80,0.12)', color: '#FF5050', border: '1px solid rgba(255,80,80,0.35)' }}
+                      >
+                        Confirmer
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reset tous classements */}
+                {resetAllState !== 'confirming' ? (
+                  <button
+                    onClick={() => setResetAllState('confirming')}
+                    className="w-full py-3 rounded-xl font-black text-sm transition-all active:scale-95"
+                    style={{
+                      background: resetAllState === 'done' ? 'rgba(0,255,135,0.10)' : 'rgba(255,80,80,0.08)',
+                      color:      resetAllState === 'done' ? '#00FF87' : '#FF5050',
+                      border:     resetAllState === 'done' ? '1px solid rgba(0,255,135,0.30)' : '1px solid rgba(255,80,80,0.25)',
+                    }}
+                  >
+                    {resetAllState === 'done' ? '✅ Tous les classements remis à zéro !' : '🗑️ Reset tous les classements'}
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-center" style={{ color: '#FF5050' }}>
+                      Êtes-vous sûr ? Cette action est irréversible.
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setResetAllState('idle')}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all active:scale-95"
+                        style={{ background: 'rgba(10,22,40,0.06)', color: '#4A6FA5', border: '1px solid rgba(0,212,255,0.15)' }}
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={() => { adminSocket.emit('admin:resetAll', { barId }); setResetAllState('idle'); }}
+                        className="flex-1 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95"
+                        style={{ background: 'rgba(255,80,80,0.12)', color: '#FF5050', border: '1px solid rgba(255,80,80,0.35)' }}
+                      >
+                        Confirmer
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Durée du round */}
+                <div>
+                  <p className="text-xs font-bold mb-2" style={{ color: '#4A6FA5' }}>Durée du round (minutes)</p>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const val = Math.max(5, Math.min(720, parseInt(roundDuration) || 60));
+                      adminSocket.emit('admin:setRoundDuration', { barId, minutes: val });
+                    }}
+                    className="flex gap-2"
+                  >
+                    <input
+                      type="number"
+                      value={roundDuration}
+                      onChange={(e) => setRoundDuration(Math.max(5, Math.min(720, parseInt(e.target.value) || 60)))}
+                      min={5}
+                      max={720}
+                      className="glass-input flex-1 rounded-xl px-3 py-2.5 text-sm"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2.5 rounded-xl text-sm font-black transition-all active:scale-95"
+                      style={{
+                        background: roundDurationSaved ? 'rgba(0,255,135,0.15)' : 'rgba(0,212,255,0.10)',
+                        color:      roundDurationSaved ? '#00FF87' : '#00D4FF',
+                        border:     roundDurationSaved ? '1px solid rgba(0,255,135,0.30)' : '1px solid rgba(0,212,255,0.25)',
+                      }}
+                    >
+                      {roundDurationSaved ? '✅' : 'Valider'}
+                    </button>
+                  </form>
+                  <p className="text-xs mt-1.5" style={{ color: 'rgba(74,111,165,0.55)' }}>
+                    Défaut : 60 min. Prend effet au prochain round.
+                  </p>
+                </div>
+
+              </div>
             </div>
 
             {/* Message classement sur les tables */}

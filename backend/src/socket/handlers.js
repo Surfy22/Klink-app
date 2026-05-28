@@ -177,8 +177,11 @@ function deliverInvite(barId, toTableId, inviteData, attempt = 1) {
 /**
  * Annule un pari actif et notifie les deux tables.
  * Libère le statut "En jeu" immédiatement.
+ * @param {string} barId
+ * @param {string} betId
+ * @param {string} [reason]  Message envoyé aux tables (défaut générique)
  */
-function cancelBet(barId, betId) {
+function cancelBet(barId, betId, reason = 'Pari annulé — pas de réponse') {
   const bar = bars[barId];
   if (!bar) return;
 
@@ -198,7 +201,7 @@ function cancelBet(barId, betId) {
   if (t1?.status === 'En jeu') t1.status = null;
   if (t2?.status === 'En jeu') t2.status = null;
 
-  const cancelEvent = { betId, message: 'Pari annulé — pas de réponse' };
+  const cancelEvent = { betId, message: reason };
   if (t1) _io.to(t1.socketId).emit('bet:cancelled', cancelEvent);
   if (t2) _io.to(t2.socketId).emit('bet:cancelled', cancelEvent);
 
@@ -289,12 +292,15 @@ function getBar(barId) {
       activeBets:         {},         // { [betId]: { table1Id, table2Id, cancelTimer } }
       inviteQueues:       {},         // { [toTableId]: [{ fromTableId, fromPseudo, fromPhoto, message }, ...] }
       reservedNames:      {},         // { [pseudoNormalisé]: tableId } — réservés jusqu'au reset
-      adminSockets:       new Set(),
-      leaderboardMessage: '',
+      adminSockets:         new Set(),
+      leaderboardMessage:   '',
       adminPassword,
-      adminEmail:         null,
-      weeklyData:         initWeeklyData(),
+      adminEmail:           null,
+      weeklyData:           initWeeklyData(),
+      roundDurationMinutes: 60,
+      roundResetTimer:      null,
     };
+    scheduleNextRoundReset(barId);
   }
   return bars[barId];
 }
@@ -312,9 +318,10 @@ function getDashboard(barId) {
       invitesSent:    bar?.stats.invitesSent    ?? 0,
       betsInProgress: bar?.stats.betsInProgress ?? 0,
     },
-    scores:             bar?.scores             ?? {},
-    leaderboardMessage: bar?.leaderboardMessage ?? '',
-    adminEmail:         bar?.adminEmail         ?? null,
+    scores:               bar?.scores               ?? {},
+    leaderboardMessage:   bar?.leaderboardMessage   ?? '',
+    adminEmail:           bar?.adminEmail           ?? null,
+    roundDurationMinutes: bar?.roundDurationMinutes ?? 60,
   };
 }
 
@@ -343,6 +350,7 @@ function maybeCleanBar(barId) {
   const bar = bars[barId];
   if (!bar) return;
   if (Object.keys(bar.tables).length === 0 && bar.adminSockets.size === 0) {
+    if (bar.roundResetTimer) clearTimeout(bar.roundResetTimer);
     delete bars[barId];
     console.log(`[${barId}] Bar vide supprimé de la mémoire`);
   }
@@ -372,6 +380,11 @@ function resetBar(barId) {
       clearTimeout(cancelTimer);
     }
   }
+  // Annuler le timer de reset horaire per-bar
+  if (bar.roundResetTimer) {
+    clearTimeout(bar.roundResetTimer);
+    bar.roundResetTimer = null;
+  }
 
   bar.stats          = { invitesSent: 0, betsInProgress: 0 };
   bar.scores         = {};
@@ -381,6 +394,10 @@ function resetBar(barId) {
   bar.activeBets     = {};
   bar.inviteQueues   = {};
   bar.reservedNames  = {};
+  // roundDurationMinutes est conservé d'un reset à l'autre
+
+  // Replanifier le reset du round (repart de l'heure courante selon la durée configurée)
+  scheduleNextRoundReset(barId);
 
   if (_io) {
     _io.to(barId).emit('scores:updated', {});
@@ -409,32 +426,52 @@ function scheduleMidnightReset() {
 
 scheduleMidnightReset();
 
-/* ── Reset horaire (classement round) ───────────────────────────────────── */
+/* ── Reset horaire (classement round) — scheduling per-bar ──────────────── */
 
+function resetHourlyScoresForBar(barId) {
+  const bar = bars[barId];
+  if (!bar) return;
+  bar.hourlyScores = {};
+  if (_io) {
+    _io.to(barId).emit('leaderboard:round-reset', {});
+    _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
+  }
+  console.log(`[${barId}] Reset horaire du classement round`);
+}
+
+/**
+ * Planifie le prochain reset du round pour un bar donné.
+ * Si durée = 60 min (défaut), snap sur la prochaine heure pile.
+ * Sinon, timer depuis maintenant avec la durée configurée.
+ */
+function scheduleNextRoundReset(barId) {
+  const bar = bars[barId];
+  if (!bar) return;
+  if (bar.roundResetTimer) clearTimeout(bar.roundResetTimer);
+  const durationMinutes = bar.roundDurationMinutes ?? 60;
+  let delayMs;
+  if (durationMinutes === 60) {
+    const now      = new Date();
+    const nextHour = new Date(now);
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+    delayMs = nextHour - now;
+  } else {
+    delayMs = durationMinutes * 60 * 1000;
+  }
+  bar.roundResetTimer = setTimeout(() => {
+    bar.roundResetTimer = null;
+    resetHourlyScoresForBar(barId);
+    scheduleNextRoundReset(barId);
+  }, delayMs);
+  console.log(`[${barId}] Prochain reset round dans ${Math.round(delayMs / 60000)} min (durée : ${durationMinutes} min)`);
+}
+
+/** Compatibilité _test — réinitialise tous les classements round */
 function resetHourlyScores() {
   for (const barId of Object.keys(bars)) {
-    bars[barId].hourlyScores = {};
-    if (_io) {
-      _io.to(barId).emit('leaderboard:round-reset', {});
-      _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
-    }
-    console.log(`[${barId}] Reset horaire du classement round`);
+    resetHourlyScoresForBar(barId);
   }
 }
-
-function scheduleHourlyReset() {
-  const now         = new Date();
-  const nextHour    = new Date(now);
-  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-  const delay       = nextHour - now;
-  setTimeout(() => {
-    resetHourlyScores();
-    scheduleHourlyReset();
-  }, delay);
-  console.log(`Reset horaire planifié dans ${Math.round(delay / 60000)} min`);
-}
-
-scheduleHourlyReset();
 
 /* ── Reset mensuel (1er du mois) ─────────────────────────────────────────── */
 
@@ -798,6 +835,13 @@ module.exports = (io) => {
         const bar = bars[barId];
         if (!bar || bar.resolvedBets.has(betId)) return; // déduplication
 
+        // Ignore les votes pour des paris de plus de 10 minutes (timestamp embarqué dans le betId)
+        const betTs = parseInt(betId.split('-').pop(), 10);
+        if (!isNaN(betTs) && Date.now() - betTs > 10 * 60 * 1000) {
+          console.warn(`[${barId}] bet:result — vote tardif ignoré pour pari ${betId} (${Math.round((Date.now() - betTs) / 60000)} min)`);
+          return;
+        }
+
         const firstVote = bar.pendingVotes[betId];
 
         if (!firstVote) {
@@ -837,22 +881,44 @@ module.exports = (io) => {
           const winnerTable = bar.tables[winnerTableId];
           const uuid = winnerTable?.tableUUID || winnerTableId;
 
+          // Identifier le perdant (l'autre table dans le pari)
+          const loserTableId = firstVote.voterTableId === winnerTableId ? currentTableId : firstVote.voterTableId;
+          const loserTable   = bar.tables[loserTableId];
+          const loserUUID    = loserTable?.tableUUID || loserTableId;
+          const loserPseudo  = loserTable?.pseudo ?? loserTableId;
+          const loserPhoto   = loserTable?.photo  ?? null;
+
           const storedPhoto  = winnerTable?.photo ?? null;
           const photoToStore = storedPhoto !== null ? storedPhoto
             : (isValidPhoto(winnerPhoto) && winnerPhoto != null ? winnerPhoto : null);
 
-          // Bug 3 — Attribution atomique des 3 classements avec rollback complet
+          // Attribution atomique des 3 classements avec rollback complet
           // Initialiser les entrées manquantes avant d'incrémenter
           if (!bar.scores[uuid]) {
-            bar.scores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: null, connected: true };
+            bar.scores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: null, connected: true, totalBets: 0, firstWinAt: null };
           }
           if (!bar.hourlyScores[uuid]) {
-            bar.hourlyScores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
+            bar.hourlyScores[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore, totalBets: 0, firstWinAt: null };
           }
           const monthly = loadMonthlyScores(barId);
           if (!monthly[uuid]) {
-            monthly[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore };
+            monthly[uuid] = { wins: 0, pseudo: winnerPseudo, tableId: winnerTableId, photo: photoToStore, totalBets: 0, firstWinAt: null };
           }
+          // Initialiser les entrées du perdant pour le suivi totalBets
+          if (!bar.scores[loserUUID]) {
+            bar.scores[loserUUID] = { wins: 0, pseudo: loserPseudo, tableId: loserTableId, photo: loserPhoto, connected: !!loserTable, totalBets: 0, firstWinAt: null };
+          }
+          if (!bar.hourlyScores[loserUUID]) {
+            bar.hourlyScores[loserUUID] = { wins: 0, pseudo: loserPseudo, tableId: loserTableId, photo: loserPhoto, totalBets: 0, firstWinAt: null };
+          }
+          if (!monthly[loserUUID]) {
+            monthly[loserUUID] = { wins: 0, pseudo: loserPseudo, tableId: loserTableId, photo: loserPhoto, totalBets: 0, firstWinAt: null };
+          }
+
+          // Sauvegarder firstWinAt avant modification (pour rollback éventuel)
+          const prevFirstWinAtE = bar.scores[uuid].firstWinAt;
+          const prevFirstWinAtH = bar.hourlyScores[uuid].firstWinAt;
+          const prevFirstWinAtM = monthly[uuid].firstWinAt;
 
           // Incrémenter les 3 classements
           bar.scores[uuid].wins++;
@@ -869,6 +935,19 @@ module.exports = (io) => {
           monthly[uuid].pseudo = winnerPseudo;
           monthly[uuid].photo  = photoToStore;
 
+          // Champs de départage : gagnant
+          const now = Date.now();
+          if (!bar.scores[uuid].firstWinAt)       bar.scores[uuid].firstWinAt       = now;
+          if (!bar.hourlyScores[uuid].firstWinAt)  bar.hourlyScores[uuid].firstWinAt  = now;
+          if (!monthly[uuid].firstWinAt)            monthly[uuid].firstWinAt            = now;
+          bar.scores[uuid].totalBets       = (bar.scores[uuid].totalBets       || 0) + 1;
+          bar.hourlyScores[uuid].totalBets = (bar.hourlyScores[uuid].totalBets || 0) + 1;
+          monthly[uuid].totalBets          = (monthly[uuid].totalBets          || 0) + 1;
+          // Champs de départage : perdant (totalBets uniquement)
+          bar.scores[loserUUID].totalBets       = (bar.scores[loserUUID].totalBets       || 0) + 1;
+          bar.hourlyScores[loserUUID].totalBets = (bar.hourlyScores[loserUUID].totalBets || 0) + 1;
+          monthly[loserUUID].totalBets          = (monthly[loserUUID].totalBets          || 0) + 1;
+
           // Persister — si ça échoue, rollback des 3 classements simultanément
           try {
             saveMonthlyScores(barId);
@@ -877,6 +956,15 @@ module.exports = (io) => {
             bar.scores[uuid].wins--;
             bar.hourlyScores[uuid].wins--;
             monthly[uuid].wins--;
+            bar.scores[uuid].firstWinAt       = prevFirstWinAtE;
+            bar.hourlyScores[uuid].firstWinAt  = prevFirstWinAtH;
+            monthly[uuid].firstWinAt            = prevFirstWinAtM;
+            if (bar.scores[uuid].totalBets       > 0) bar.scores[uuid].totalBets--;
+            if (bar.hourlyScores[uuid].totalBets > 0) bar.hourlyScores[uuid].totalBets--;
+            if (monthly[uuid].totalBets          > 0) monthly[uuid].totalBets--;
+            if ((bar.scores[loserUUID]?.totalBets       ?? 0) > 0) bar.scores[loserUUID].totalBets--;
+            if ((bar.hourlyScores[loserUUID]?.totalBets ?? 0) > 0) bar.hourlyScores[loserUUID].totalBets--;
+            if ((monthly[loserUUID]?.totalBets          ?? 0) > 0) monthly[loserUUID].totalBets--;
             // Remettre betsInProgress car le pari n'est pas réellement résolu
             bar.stats.betsInProgress++;
             bar.resolvedBets.delete(betId);
@@ -1065,6 +1153,65 @@ module.exports = (io) => {
       }
     });
 
+    // ── CONTRÔLES AVANCÉS ADMIN ───────────────────────────────────────────────
+
+    socket.on('admin:resetHourly', (payload) => {
+      try {
+        if (!isAdmin) return;
+        const { barId } = payload ?? {};
+        if (barId !== currentBarId) return;
+        resetHourlyScoresForBar(barId);
+        scheduleNextRoundReset(barId);
+        socket.emit('admin:resetDone', { type: 'hourly' });
+        notifyAdmins(io, barId);
+        console.log(`[${barId}] Reset horaire manuel par admin`);
+      } catch (err) {
+        console.error('[admin:resetHourly] erreur :', err.message);
+      }
+    });
+
+    socket.on('admin:resetAll', (payload) => {
+      try {
+        if (!isAdmin) return;
+        const { barId } = payload ?? {};
+        if (barId !== currentBarId) return;
+        const bar = bars[barId];
+        if (!bar) return;
+        bar.hourlyScores = {};
+        bar.scores       = {};
+        monthlyScores[barId] = {};
+        saveMonthlyScores(barId);
+        scheduleNextRoundReset(barId);
+        if (_io) {
+          _io.to(barId).emit('leaderboard:round-reset', {});
+          _io.to(barId).emit('scores:updated', {});
+          _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
+        }
+        socket.emit('admin:resetDone', { type: 'all' });
+        notifyAdmins(io, barId);
+        console.log(`[${barId}] Reset complet (tous classements) par admin`);
+      } catch (err) {
+        console.error('[admin:resetAll] erreur :', err.message);
+      }
+    });
+
+    socket.on('admin:setRoundDuration', (payload) => {
+      try {
+        if (!isAdmin) return;
+        const { barId, minutes } = payload ?? {};
+        if (barId !== currentBarId) return;
+        if (typeof minutes !== 'number' || minutes < 5 || minutes > 720) return;
+        const bar = bars[barId];
+        if (!bar) return;
+        bar.roundDurationMinutes = minutes;
+        scheduleNextRoundReset(barId);
+        socket.emit('admin:roundDurationSaved', { minutes });
+        console.log(`[${barId}] Durée du round : ${minutes} min`);
+      } catch (err) {
+        console.error('[admin:setRoundDuration] erreur :', err.message);
+      }
+    });
+
     // ── PARTAGE DE CONTACT DIRECT ─────────────────────────────────────────────
 
     socket.on('contact:send', (payload) => {
@@ -1145,6 +1292,14 @@ module.exports = (io) => {
                   });
                   delete bar.inviteQueues[currentTableId];
                 }
+                // Annuler les paris actifs impliquant cette table (libère l'adversaire immédiatement)
+                for (const betId of Object.keys(bar.activeBets ?? {})) {
+                  const bet = bar.activeBets[betId];
+                  if (bet.table1Id === currentTableId || bet.table2Id === currentTableId) {
+                    cancelBet(currentBarId, betId, 'Pari annulé — adversaire déconnecté');
+                  }
+                }
+
                 // Marquer la table comme déconnectée dans le classement (reste visible en grisé)
                 const removedUUID = cur.tableUUID || currentTableId;
                 if (bar.scores[removedUUID]) {
@@ -1430,4 +1585,17 @@ async function sendMonthlyReport(barId, monthly, bar) {
     console.error(`[KLINK] ❌ Erreur email mensuel (${barId}) :`, err.message);
   }
 }
+
+/* ── Hooks de test (NODE_ENV=test uniquement) ───────────────────────────── */
+
+/**
+ * Expose les fonctions de reset internes pour les routes /_test/*.
+ * N'est jamais appelé en production car index.js vérifie NODE_ENV.
+ */
+module.exports._test = {
+  resetHourly:   resetHourlyScores,
+  resetMidnight: (barId) => resetBar(barId),
+  resetMonthly:  resetMonthlyScores,
+  getBars:       () => bars,
+};
 

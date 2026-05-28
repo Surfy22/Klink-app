@@ -91,7 +91,14 @@ export default function TablesPage({
 
   // Classements triés (top 5)
   const lb = leaderboard ?? { hourly: {}, evening: {}, monthly: {} };
-  const toTop5 = (obj) => Object.entries(obj || {}).sort(([, a], [, b]) => b.wins - a.wins).slice(0, 5);
+  const toTop5 = (obj) => Object.entries(obj || {})
+    .sort(([, a], [, b]) => {
+      if (b.wins !== a.wins) return b.wins - a.wins;
+      const aTB = a.totalBets ?? 0, bTB = b.totalBets ?? 0;
+      if (bTB !== aTB) return bTB - aTB;
+      return (a.firstWinAt ?? Infinity) - (b.firstWinAt ?? Infinity);
+    })
+    .slice(0, 5);
   const topRound   = toTop5(lb.hourly);
   const topEvening = toTop5(lb.evening);
   const topMonth   = toTop5(lb.monthly);
@@ -104,7 +111,7 @@ export default function TablesPage({
   const hasLeaderboard = topScores.length > 0 || topRound.length > 0 || topEvening.length > 0 || topMonth.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F0F4FF' }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#F0F4FF', height: '100dvh' }}>
 
       {/* Header glassmorphism */}
       <header
@@ -139,7 +146,7 @@ export default function TablesPage({
       )}
 
       {/* Corps */}
-      <main className="flex-1 overflow-y-auto p-4" style={{ paddingBottom: hasLeaderboard ? '0' : '16px' }}>
+      <main className="flex-1 min-h-0 overflow-y-auto p-4" style={{ paddingBottom: hasLeaderboard ? '0' : '16px' }}>
         <div className="max-w-sm mx-auto">
 
           {/* Partager contact */}
@@ -217,7 +224,7 @@ export default function TablesPage({
       {/* Widget classement en bas */}
       {hasLeaderboard && (
         <div
-          className="w-full"
+          className="w-full shrink-0"
           style={{
             background:     'rgba(240,244,255,0.97)',
             backdropFilter: 'blur(24px)',
@@ -397,7 +404,7 @@ export default function TablesPage({
 
       {/* Footer statut */}
       <footer
-        className="px-4 py-2.5 flex items-center justify-center gap-2"
+        className="px-4 py-2.5 flex items-center justify-center gap-2 shrink-0"
         style={{
           background: 'rgba(240,244,255,0.92)',
           borderTop:  '1px solid rgba(0,212,255,0.14)',
