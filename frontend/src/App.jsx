@@ -39,6 +39,7 @@ export default function App() {
   const [scores, setScores]                         = useState({});
   const [leaderboard, setLeaderboard]               = useState({ hourly: {}, evening: {}, monthly: {} });
   const [roundReset, setRoundReset]                 = useState(0); // incrémenté à chaque reset horaire
+  const [roundResetAt, setRoundResetAt]             = useState(null); // timestamp du prochain reset
   const [leaderboardMessage, setLeaderboardMessage] = useState('');
   const [inviteTarget, setInviteTarget]             = useState(null);
   const [pendingInvite, setPendingInvite]           = useState(null);
@@ -78,9 +79,11 @@ export default function App() {
     };
     const onLeaderboardUpdated = (data) => {
       setLeaderboard(data);
+      if (data.nextResetAt) setRoundResetAt(data.nextResetAt);
     };
-    const onRoundReset = () => {
+    const onRoundReset = ({ nextResetAt } = {}) => {
       setRoundReset((n) => n + 1);
+      if (nextResetAt) setRoundResetAt(nextResetAt);
     };
     const onLeaderboardMsg = ({ message }) => {
       setLeaderboardMessage(message);
@@ -371,6 +374,7 @@ export default function App() {
           scores={scores}
           leaderboard={leaderboard}
           roundReset={roundReset}
+          roundResetAt={roundResetAt}
           leaderboardMessage={leaderboardMessage}
           tableId={tableId}
           barId={barId}

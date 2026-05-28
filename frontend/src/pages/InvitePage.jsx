@@ -11,10 +11,10 @@ const QUICK_MESSAGES = [
 ];
 
 const PRESET_BETS = [
-  { emoji: '🎯', text: 'Je parie une bière que tu perds aux fléchettes !' },
-  { emoji: '🎱', text: 'Je parie une bière que je gagne au billard !' },
-  { emoji: '🍺', text: 'Je parie une bière sur celui qui finit son verre en premier !' },
-  { emoji: '🎳', text: 'Je parie une bière que vous ratez votre prochain lancer !' },
+  { emoji: '🎯', text: 'Je parie un verre que tu perds aux fléchettes !' },
+  { emoji: '🎱', text: 'Je parie un verre que je gagne au billard !' },
+  { emoji: '🥂', text: 'Je parie un verre sur celui qui finit son verre en premier !' },
+  { emoji: '🎳', text: 'Je parie un verre que vous ratez votre prochain lancer !' },
 ];
 
 /* ── Icônes SVG ──────────────────────────────────────────────────────────── */
@@ -41,6 +41,17 @@ const ICONS = {
     ),
   },
   '🍺': {
+    bg: 'rgba(251,191,36,0.10)',
+    svg: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <path d="M6 4h9L13.5 18H7.5L6 4z" fill="#F59E0B" />
+        <path d="M15 7.5h3a1.5 1.5 0 010 3h-3" stroke="#F59E0B" strokeWidth="1.8" strokeLinecap="round" />
+        <rect x="8" y="8" width="5" height="4" rx="1" fill="rgba(255,255,255,0.30)" />
+        <path d="M9 4v2M12 4v2" stroke="rgba(255,255,255,0.55)" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  '🥂': {
     bg: 'rgba(251,191,36,0.10)',
     svg: (
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
@@ -165,7 +176,7 @@ function Card({ emojiKey, text, selected, onClick, enterAnimClass, enterDelay })
 /* ── Page principale ─────────────────────────────────────────────────────── */
 
 export default function InvitePage({ user, target, onSend, onBack }) {
-  const [displayMode,  setDisplayMode]  = useState('defi');
+  const [displayMode,  setDisplayMode]  = useState('pari');
   const [animPhase,    setAnimPhase]    = useState('idle'); // 'idle' | 'exit' | 'enter'
   const [exitDir,      setExitDir]      = useState(-1);    // -1=sortie gauche, +1=sortie droite
   const [enterFromRight, setEnterFromRight] = useState(true); // direction d'entrée
@@ -182,7 +193,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
       return `${q.emoji} ${q.text}`;
     }
     if (displayMode === 'pari' && selectedPari !== null) {
-      return `🍺 ${PRESET_BETS[selectedPari].text}`;
+      return `🥂 ${PRESET_BETS[selectedPari].text}`;
     }
     return null;
   }
@@ -190,7 +201,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
   const message = getMessage();
 
   // Mode actif du toggle (suit displayMode sauf pendant la phase exit)
-  const [toggleMode, setToggleMode] = useState('defi');
+  const [toggleMode, setToggleMode] = useState('pari');
 
   function switchMode(next) {
     if (next === displayMode || lockRef.current) return;
@@ -264,10 +275,11 @@ export default function InvitePage({ user, target, onSend, onBack }) {
           </div>
 
           {/* ── Toggle avec indicateur glissant ── */}
+          {/* display:'none' — pour réactiver l'onglet Défi, remplacer par display:'flex' */}
           <div
             style={{
               position:     'relative',
-              display:      'flex',
+              display:      'none',
               padding:      4,
               background:   '#F0F4FF',
               borderRadius: 14,
@@ -291,7 +303,7 @@ export default function InvitePage({ user, target, onSend, onBack }) {
             {/* Labels au-dessus de l'indicateur */}
             {[
               { key: 'defi', label: 'Défi' },
-              { key: 'pari', label: 'Pari bière 🍺' },
+              { key: 'pari', label: 'Pari un verre 🥂' },
             ].map(({ key, label }) => (
               <button
                 key={key}

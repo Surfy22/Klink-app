@@ -45,8 +45,8 @@ function LightningScore({ wins }) {
   );
 }
 
-/** Calcule le temps restant jusqu'au prochain reset horaire (heure pile) */
-function useRoundCountdown(roundReset) {
+/** Calcule le temps restant jusqu'au prochain reset du round */
+function useRoundCountdown(roundReset, roundResetAt) {
   const [timeLeft, setTimeLeft] = useState('');
   const [showFlash, setShowFlash] = useState(false);
   const prevReset = useRef(roundReset);
@@ -61,24 +61,29 @@ function useRoundCountdown(roundReset) {
 
   useEffect(() => {
     function update() {
-      const now     = new Date();
-      const nextHr  = new Date(now);
-      nextHr.setHours(nextHr.getHours() + 1, 0, 0, 0);
-      const diff    = Math.max(0, nextHr - now);
-      const m       = Math.floor(diff / 60000);
-      const s       = Math.floor((diff % 60000) / 1000);
+      let diff;
+      if (roundResetAt) {
+        diff = Math.max(0, roundResetAt - Date.now());
+      } else {
+        const now    = new Date();
+        const nextHr = new Date(now);
+        nextHr.setHours(nextHr.getHours() + 1, 0, 0, 0);
+        diff = Math.max(0, nextHr - now);
+      }
+      const m = Math.floor(diff / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
       setTimeLeft(`${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
     }
     update();
     const id = setInterval(update, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [roundResetAt]);
 
   return { timeLeft, showFlash };
 }
 
 export default function TablesPage({
-  user, tables, scores, leaderboard, roundReset, leaderboardMessage, tableId, barId,
+  user, tables, scores, leaderboard, roundReset, roundResetAt, leaderboardMessage, tableId, barId,
   connected,
   onInvite,
   inviteResponse,
@@ -87,7 +92,7 @@ export default function TablesPage({
 }) {
   const [showQR, setShowQR]           = useState(false);
   const [lbTab, setLbTab]             = useState('round'); // 'round' | 'evening' | 'month'
-  const { timeLeft, showFlash }       = useRoundCountdown(roundReset);
+  const { timeLeft, showFlash }       = useRoundCountdown(roundReset, roundResetAt);
 
   // Classements triés (top 5)
   const lb = leaderboard ?? { hourly: {}, evening: {}, monthly: {} };
@@ -442,7 +447,7 @@ export default function TablesPage({
             boxShadow:      '0 4px 20px rgba(0,0,0,0.12)',
           }}
         >
-          {senderNotif.type === 'queued' ? '⏳' : '🍺'}
+          {senderNotif.type === 'queued' ? '⏳' : '🥂'}
           <span style={{ color: '#0A1628' }}>
             {senderNotif.type === 'queued'
               ? <><span style={{ fontWeight: 900 }}>{senderNotif.pseudo}</span> reçoit déjà une invitation — la tienne est en attente</>

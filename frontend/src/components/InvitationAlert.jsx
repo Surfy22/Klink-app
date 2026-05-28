@@ -36,6 +36,17 @@ const ICONS = {
       </svg>
     ),
   },
+  '🥂': {
+    bg: 'rgba(251,191,36,0.10)',
+    svg: (
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+        <path d="M6 4h9L13.5 18H7.5L6 4z" fill="#F59E0B" />
+        <path d="M15 7.5h3a1.5 1.5 0 010 3h-3" stroke="#F59E0B" strokeWidth="1.8" strokeLinecap="round" />
+        <rect x="8" y="8" width="5" height="4" rx="1" fill="rgba(255,255,255,0.30)" />
+        <path d="M9 4v2M12 4v2" stroke="rgba(255,255,255,0.55)" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
   '💬': {
     bg: 'rgba(99,102,241,0.10)',
     svg: (
@@ -133,7 +144,7 @@ export default function InvitationAlert({ invite, onAccept, onDecline }) {
                 className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full flex items-center justify-center text-sm shadow-lg"
                 style={{ background: 'linear-gradient(135deg, #00FF87, #00D4FF)' }}
               >
-                🍺
+                🥂
               </div>
             </div>
           </div>

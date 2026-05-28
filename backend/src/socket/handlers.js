@@ -52,13 +52,14 @@ function saveMonthlyScores(barId) {
   }
 }
 
-/** Retourne les 3 classements sous forme d'objet { hourly, evening, monthly } */
+/** Retourne les 3 classements sous forme d'objet { hourly, evening, monthly, nextResetAt } */
 function getAllLeaderboards(barId) {
   const bar = bars[barId];
   return {
-    hourly:  bar ? { ...bar.hourlyScores } : {},
-    evening: bar ? { ...bar.scores }       : {},
-    monthly: { ...(loadMonthlyScores(barId)) },
+    hourly:      bar ? { ...bar.hourlyScores } : {},
+    evening:     bar ? { ...bar.scores }       : {},
+    monthly:     { ...(loadMonthlyScores(barId)) },
+    nextResetAt: bar?.nextResetAt ?? null,
   };
 }
 
@@ -299,6 +300,7 @@ function getBar(barId) {
       weeklyData:           initWeeklyData(),
       roundDurationMinutes: 60,
       roundResetTimer:      null,
+      nextResetAt:          null,
     };
     scheduleNextRoundReset(barId);
   }
@@ -433,7 +435,7 @@ function resetHourlyScoresForBar(barId) {
   if (!bar) return;
   bar.hourlyScores = {};
   if (_io) {
-    _io.to(barId).emit('leaderboard:round-reset', {});
+    _io.to(barId).emit('leaderboard:round-reset', { nextResetAt: bar.nextResetAt ?? null });
     _io.to(barId).emit('leaderboard:updated', getAllLeaderboards(barId));
   }
   console.log(`[${barId}] Reset horaire du classement round`);
@@ -441,23 +443,16 @@ function resetHourlyScoresForBar(barId) {
 
 /**
  * Planifie le prochain reset du round pour un bar donné.
- * Si durée = 60 min (défaut), snap sur la prochaine heure pile.
- * Sinon, timer depuis maintenant avec la durée configurée.
+ * Toujours calculé depuis maintenant avec la durée configurée,
+ * de sorte qu'un reset manuel repart bien de la durée complète.
  */
 function scheduleNextRoundReset(barId) {
   const bar = bars[barId];
   if (!bar) return;
   if (bar.roundResetTimer) clearTimeout(bar.roundResetTimer);
   const durationMinutes = bar.roundDurationMinutes ?? 60;
-  let delayMs;
-  if (durationMinutes === 60) {
-    const now      = new Date();
-    const nextHour = new Date(now);
-    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-    delayMs = nextHour - now;
-  } else {
-    delayMs = durationMinutes * 60 * 1000;
-  }
+  const delayMs = durationMinutes * 60 * 1000;
+  bar.nextResetAt = Date.now() + delayMs;
   bar.roundResetTimer = setTimeout(() => {
     bar.roundResetTimer = null;
     resetHourlyScoresForBar(barId);

@@ -285,7 +285,7 @@ export default function AdminPage() {
                       <Avatar pseudo={pseudo} photo={photo ?? null} size={32} />
                       <p className="text-white font-semibold text-sm flex-1 truncate">{pseudo}</p>
                       <span className="text-white font-black text-sm shrink-0">
-                        {wins} 🍺
+                        {wins} 🥂
                       </span>
                     </div>
                   ))}
@@ -724,7 +724,7 @@ export default function AdminPage() {
                                 {j + 1}
                               </span>
                               <p className="text-white/75 text-xs flex-1 truncate">{pseudo}</p>
-                              <span className="text-white/60 text-xs">{wins} 🍺</span>
+                              <span className="text-white/60 text-xs">{wins} 🥂</span>
                             </div>
                           ))}
                         </div>
