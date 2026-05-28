@@ -20,3 +20,6 @@ Thumbs.db
 # Build frontend
 dist/
 build/
+
+# QR codes générés (fichiers locaux, non versionnés)
+qrcodes/
